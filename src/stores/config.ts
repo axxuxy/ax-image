@@ -10,7 +10,6 @@ export const useConfig = defineStore("config", () => {
     setRequestProxy(_);
     if (_) {
       await ipcRenderer.invoke("set proxy", `${_.type}://${_.host}:${_.port}`);
-      console.log("set ipc succeed", JSON.stringify(_));
       localStorage.setItem("proxy", JSON.stringify(_));
     } else {
       await ipcRenderer.invoke("clear proxy");

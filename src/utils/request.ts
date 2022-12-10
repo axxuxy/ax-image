@@ -112,7 +112,6 @@ export default class {
           if (!response.statusCode?.toString().startsWith("2")) {
             reject(new Error(`Response code is ${response.statusCode}`));
             response.destroy();
-            console.log(save);
             return;
           }
           if (onprogress) {

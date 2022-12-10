@@ -72,7 +72,6 @@ async function setProxy() {
     );
   } catch (error) {
     ElMessage.error(language.value.settingsPage.context.proxy.setProxyFailed);
-    console.log(error);
     throw error;
   } finally {
     settingProxy.value = false;
