@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { useLanguage } from "@/stores/language";
+import { useConfig } from "@/stores/config";
 import { ProxyType } from "@/utils/request";
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 const { language } = storeToRefs(useLanguage());
+const config = useConfig();
+const { proxy } = storeToRefs(config);
 
 const router = useRouter();
 interface SettingContent {
@@ -25,15 +29,67 @@ function query(str: string, callback: Function) {
 const proxyTypes = (
   Object.keys(ProxyType) as Array<keyof typeof ProxyType>
 ).map((key) => ProxyType[key]);
-const proxyType = ref();
-const proxyHost = ref("");
-const proxyPort = ref<number>();
+const proxyType = ref(config.proxy?.type);
+const proxyHost = ref(config.proxy?.host);
+const proxyPort = ref(config.proxy?.port);
+const watchProxy = watch(proxy, (value) => {
+  if (value && !proxyType.value && !proxyHost.value && !proxyPort.value) {
+    proxyType.value = value.type;
+    proxyHost.value = value.host;
+    proxyPort.value = value.port;
+  }
+});
+setTimeout(watchProxy, 100);
+const settingProxy = ref(false);
+async function setProxy() {
+  if (!proxyType.value)
+    return ElMessage.warning(
+      language.value.settingsPage.context.proxy.pleaseSelectProxyType
+    );
+  if (!proxyHost.value)
+    return ElMessage.warning(
+      language.value.settingsPage.context.proxy.pleaseSetProxyHost
+    );
+  if (!/^[^.]+(.[^.]+){1,}$/.test(proxyHost.value))
+    return ElMessage.warning(
+      language.value.settingsPage.context.proxy.proxyHostAbnormal
+    );
+  if (!proxyPort.value)
+    return ElMessage.warning(
+      language.value.settingsPage.context.proxy.pleaseSetProxyPort
+    );
+  try {
+    settingProxy.value = true;
 
-function setProxy() {
-  throw new Error("Setting proxy.");
+    await config.setProxy({
+      type: proxyType.value,
+      host: proxyHost.value,
+      port: proxyPort.value,
+    });
+
+    ElMessage.success(
+      language.value.settingsPage.context.proxy.setProxySucceed
+    );
+  } catch (error) {
+    ElMessage.error(language.value.settingsPage.context.proxy.setProxyFailed);
+    throw error;
+  } finally {
+    settingProxy.value = false;
+  }
 }
-function clearProxy() {
-  throw new Error("Clear proxy.");
+
+async function clearProxy() {
+  try {
+    await config.setProxy(undefined);
+    ElMessage.success(
+      language.value.settingsPage.context.proxy.clearProxySucceed
+    );
+  } catch (error) {
+    ElMessage.error(language.value.settingsPage.context.proxy.clearProxyFailed);
+    throw error;
+  } finally {
+    settingProxy.value = false;
+  }
 }
 
 function changeDownload() {
@@ -121,10 +177,10 @@ const rating = ref(true);
             </ElInput>
           </ElFormItem>
           <ElFormItem>
-            <ElButton @click="setProxy">{{
+            <ElButton @click="setProxy" :disabled="settingProxy">{{
               language.settingsPage.context.proxy.settingProxy
             }}</ElButton>
-            <ElButton @click="clearProxy">{{
+            <ElButton @click="clearProxy" :disabled="settingProxy">{{
               language.settingsPage.context.proxy.clearProxy
             }}</ElButton>
           </ElFormItem>
