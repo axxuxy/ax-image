@@ -17,13 +17,5 @@ export const useConfig = defineStore("config", () => {
     }
     proxy.value = _;
   }
-  const _proxy = localStorage.getItem("proxy");
-
-  if (_proxy)
-    try {
-      setProxy(JSON.parse(_proxy));
-    } catch (error) {
-      window.dispatchEvent(new ErrorEvent("Error", error as Error));
-    }
   return { proxy, setProxy };
 });
