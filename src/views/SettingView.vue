@@ -3,12 +3,11 @@ import { useLanguage } from "@/stores/language";
 import { useConfig } from "@/stores/config";
 import { ProxyType } from "@/utils/request";
 import { storeToRefs } from "pinia";
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 const { language } = storeToRefs(useLanguage());
 const config = useConfig();
-const { proxy } = storeToRefs(config);
 
 const router = useRouter();
 interface SettingContent {
@@ -32,14 +31,6 @@ const proxyTypes = (
 const proxyType = ref(config.proxy?.type);
 const proxyHost = ref(config.proxy?.host);
 const proxyPort = ref(config.proxy?.port);
-const watchProxy = watch(proxy, (value) => {
-  if (value && !proxyType.value && !proxyHost.value && !proxyPort.value) {
-    proxyType.value = value.type;
-    proxyHost.value = value.host;
-    proxyPort.value = value.port;
-  }
-});
-setTimeout(watchProxy, 100);
 const settingProxy = ref(false);
 async function setProxy() {
   if (!proxyType.value)
