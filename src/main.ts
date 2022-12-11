@@ -14,6 +14,7 @@ import {
 
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import { ipcRenderer } from "electron";
+import { useConfig } from "@/stores/config";
 
 addErrorEventListener((errorInfo) => {
   console.error(errorInfo);
@@ -31,7 +32,15 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(createPinia());
 app.use(router);
 
-app.mount("#app");
+const proxy = localStorage.getItem("proxy");
+if (proxy)
+  useConfig()
+    .setProxy(JSON.parse(proxy))
+    .catch((error) =>
+      window.dispatchEvent(new ErrorEvent("Error", error as Error))
+    )
+    .finally(() => app.mount("#app"));
+else app.mount("#app");
 
 window.addEventListener("keydown", (event) => {
   if (event.shiftKey && event.ctrlKey && event.key === "I")
