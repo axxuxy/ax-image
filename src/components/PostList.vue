@@ -111,6 +111,13 @@ async function failedGetPosts() {
           ? language.postListComponent.noMore
           : language.postListComponent.none
       }}</span>
+      <ElButton
+        @click="update"
+        icon="refresh"
+        color="var(--el-color-success)"
+        text
+        plain
+      />
     </ElAlert>
   </ElScrollbar>
   <ElBacktop :target="backTopTarget" />
