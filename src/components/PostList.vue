@@ -105,7 +105,7 @@ async function failedGetPosts() {
         />
       </ElSpace>
     </ElAlert>
-    <ElAlert v-else-if="noMore" center type="success" closable>
+    <ElAlert v-else-if="noMore" center type="success" :closable="false">
       <span>{{
         posts.length
           ? language.postListComponent.noMore
