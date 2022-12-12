@@ -87,12 +87,20 @@ const homePage = {
   search: "搜索",
 };
 
+const postListComponent = {
+  loadingFailed: "加载失败...",
+  loading: "加载中...",
+  noMore: "没有更多帖子了...",
+  none: "没有符合条件的帖子...",
+};
+
 const zhCn = {
   name: "中文",
   elementPlus: _zhCn,
   downloadPage,
   settingsPage,
   homePage,
+  postListComponent,
 };
 
 export const i18n: {

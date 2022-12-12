@@ -54,8 +54,6 @@ async function createWindow() {
     protocol.registerFileProtocol("app", (req, res) => {
       const path = req.url.slice(website.length);
 
-      console.log("\x1b[34m", "Get path by app.", path, "\x1b[0m");
-
       let file = resolve(root, path);
       if (!file.startsWith(root))
         return res({

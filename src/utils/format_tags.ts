@@ -9,7 +9,7 @@ export enum TagMode {
 /**
  * @prop {string} tag Can use `*` as a wildcard.
  */
-interface Tag {
+export interface Tag {
   mode: TagMode;
   tag: string;
 }
