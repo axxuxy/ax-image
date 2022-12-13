@@ -44,15 +44,15 @@
     "eslint-plugin-vue": "^9.8.0",
     "fake-indexeddb": "^4.0.1",
     "jsdom": "^20.0.3",
-    "msw": "^0.49.1",
+    "msw": "^0.49.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.1",
     "typescript": "~4.7.4",
     "unplugin-auto-import": "^0.11.5",
-    "unplugin-vue-components": "^0.22.11",
+    "unplugin-vue-components": "^0.22.12",
     "vite": "^3.2.5",
-    "vite-plugin-electron": "git+https://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@github.com/axxuxy/vite-plugin-electron.git",
+    "vite-plugin-electron": "git+https://axxuxy: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@github.com/axxuxy/vite-plugin-electron.git",
     "vitest": "^0.24.5",
-    "vue-tsc": "^1.0.12"
+    "vue-tsc": "^1.0.13"
   }
 }

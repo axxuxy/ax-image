@@ -1,65 +1,77 @@
 <script lang="ts" setup>
-import { TagMode, type TagsOptions, type Tag } from "@/utils/format_tags";
+import { TagMode, type TagsOptions } from "@/utils/format_tags";
+import type { Website } from "@/utils/website";
 import { ref } from "vue";
-const porps = defineProps<{ modelValue: TagsOptions; update: boolean }>();
-defineEmits<{
-  "update:modelValue": void;
-  close: void;
-  "update:update": (update: boolean) => void;
+import AutocompleteInputTagVue from "@/components/tools/AddTag.vue";
+import type { Tag } from "@/components/tools/AddTagItem.vue";
+
+export interface TagFilterOptions extends TagsOptions {
+  tags?: Array<Tag>;
+}
+
+const props = defineProps<{
+  modelValue?: TagFilterOptions;
+  website: Website;
 }>();
 
-const tags = ref(
-  porps.modelValue.tags?.map((tag) => ({
-    ...tag,
-    key: `${tag.tag}-${tag.mode}`,
-  })) ?? []
-);
+const emit = defineEmits({
+  search: (value: TagFilterOptions) => value && true,
+  close: () => true,
+});
 
-function removeTag(tag: Tag) {
+const tags = ref(props.modelValue?.tags ?? []);
+
+/// Add tag and remove tag function.
+function selectTag(tag: Tag) {
+  const _ = tags.value.filter((_) => _.name !== tag.name);
+  _.push({
+    ...tag,
+  });
+  tags.value = _;
+}
+function removeTag(tag: Tag | { type: string }) {
   tags.value = tags.value.filter((_) => _ !== tag);
+}
+
+function search() {
+  emit("search", {
+    tags: tags.value,
+  });
 }
 </script>
 
 <template>
-  <ElSpace direction="vertical" class="tags-box" alignment="start">
-    <ElSpace wrap class="tag-list" v-if="tags.length">
-      <p>This's tag list of tags tilter.</p>
+  <ElSpace direction="vertical" class="tags-box" alignment="start" fill>
+    <ElSpace wrap class="tag-list">
       <ElTag
         v-for="tag in tags"
-        :key="tag.key"
+        :key="tag.id"
         closable
         @close="removeTag(tag)"
+        disable-transitions
+        :class="['--tag', `--tag-${tag.type}`]"
       >
         <ElIcon v-if="tag.mode === TagMode.is">+</ElIcon>
         <ElIcon v-else-if="tag.mode === TagMode.not">-</ElIcon>
         <ElIcon v-else-if="tag.mode === TagMode.or">~</ElIcon>
-        {{ tag.tag }}
+        <span>{{ tag.name }}</span>
+        <span> - </span>
+        <span>{{ tag.count }}</span>
       </ElTag>
+      <AutocompleteInputTagVue
+        :website="props.website"
+        @select="selectTag"
+      ></AutocompleteInputTagVue>
     </ElSpace>
-    <ElSpace wrap class="tag-filter">
-      <p>This's tag filter items of tags tilter.</p>
+    <ElSpace style="justify-content: end">
+      <ElButton circle @click="search" icon="search"></ElButton>
+      <ElButton circle @click="emit('close')" icon="close"> </ElButton>
     </ElSpace>
-    <p>Tag filter props is:</p>
-    <code>
-      {{ $props }}
-    </code>
-    <ElButton
-      circle
-      @click="$emit('update:update', true)"
-      icon="refresh-left"
-      :disabled="update"
-    ></ElButton>
-    <ElButton circle @click="$emit('close')" icon="close"> </ElButton>
   </ElSpace>
 </template>
 
 <style lang="scss" scoped>
-.tag-list,
-.tag-filter {
+.tags-box {
   width: 100%;
-}
-
-code {
-  white-space: pre-wrap;
 }
 </style>

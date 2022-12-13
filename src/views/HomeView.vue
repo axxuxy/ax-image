@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { configs as _configs } from "@/utils/website";
+import { configs as _configs, type Config } from "@/utils/website";
 import { computed, ref, watch } from "vue";
 import { useLanguage } from "@/stores/language";
 import { storeToRefs } from "pinia";
-import TagFilter from "@/components/TagFilter.vue";
+import TagFilter, { type TagFilterOptions } from "@/components/TagFilter.vue";
 import PostList from "@/components/PostList.vue";
-import { type TagsOptions, formatTags, TagMode } from "@/utils/format_tags";
+import { formatTags } from "@/utils/format_tags";
 const { language } = storeToRefs(useLanguage());
 const configs = computed(() =>
   _configs.map((config) => ({
@@ -13,33 +13,31 @@ const configs = computed(() =>
     name: language.value.homePage.websites[config.website],
   }))
 );
-const website = ref(configs.value[0].website);
+const config = ref(configs.value[0]);
+function websiteCommand(_: Config & { name: string }) {
+  config.value = _;
+}
 
 const showFilter = ref(false);
 
-const tagOptions = ref<TagsOptions>({
-  tags: [
-    {
-      tag: "original",
-      mode: TagMode.is,
-    },
-    {
-      tag: "name",
-      mode: TagMode.not,
-    },
-    {
-      tag: "name",
-      mode: TagMode.or,
-    },
-  ],
-});
+const tagOptions = ref<TagFilterOptions>({});
 
+const postsKey = computed(() =>
+  [
+    config.value.website,
+    ...(formatTags(tagOptions.value)?.split(" ")?.sort() ?? []),
+  ].join(" ")
+);
 const posts = ref<typeof PostList | null>(null);
 const update = ref(false);
 watch(update, async (value) => {
   if (value) await posts.value?.update();
   update.value = false;
 });
+
+function search(_: TagFilterOptions) {
+  tagOptions.value = _;
+}
 </script>
 
 <template>
@@ -53,26 +51,30 @@ watch(update, async (value) => {
         </template>
         <template #extra>
           <ElSpace>
-            <ElSelect v-model="website">
-              <ElOption
-                v-for="config in configs"
-                :key="config.website"
-                :label="config.name"
-                :value="config.website"
-              >
-              </ElOption>
-            </ElSelect>
-            <ElInput
-              suffix-icon="search"
-              class="search"
-              :placeholder="language.homePage.search"
-            >
-              <template #prefix>
-                <ElIcon @click="showFilter = true" class="show-filter">
-                  <Filter />
-                </ElIcon>
+            <ElDropdown split-button @command="websiteCommand">
+              <span>{{ config.name }}</span>
+              <template #dropdown>
+                <ElDropdownMenu>
+                  <ElDropdownItem
+                    v-for="config in configs"
+                    :key="config.website"
+                    :command="config"
+                    >{{ config.name }}
+                  </ElDropdownItem>
+                </ElDropdownMenu>
               </template>
-            </ElInput>
+            </ElDropdown>
+            <ElButton
+              icon="search"
+              @click="showFilter = true"
+              circle
+            ></ElButton>
+            <ElButton
+              icon="refresh-left"
+              @click="update = true"
+              :disabled="update"
+              circle
+            ></ElButton>
             <ElLink :underline="false" href="/download">
               <ElIcon size="20">
                 <Download />
@@ -89,16 +91,17 @@ watch(update, async (value) => {
           class="filter"
           v-model="tagOptions"
           v-show="showFilter"
+          :website="config.website"
           @close="showFilter = false"
-          v-model:update="update"
-        ></TagFilter>
+          @search="search"
+        />
       </ElPageHeader>
     </ElHeader>
     <ElMain>
       <PostList
-        :website="website"
+        :website="config.website"
         :tag-options="tagOptions"
-        :key="`${website}-${formatTags(tagOptions)}`"
+        :key="postsKey"
         ref="posts"
       >
       </PostList>
@@ -158,19 +161,9 @@ watch(update, async (value) => {
         margin: 0;
       }
 
-      .search {
-        :deep(.el-input__wrapper) {
-          border-radius: 16px !important;
-        }
-
-        .show-filter {
-          cursor: pointer;
-        }
-      }
-
       .filter {
         box-sizing: border-box;
-        padding: 20px 20px 0;
+        padding: 12px;
       }
     }
   }

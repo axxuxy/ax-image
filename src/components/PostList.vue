@@ -105,19 +105,13 @@ async function failedGetPosts() {
         />
       </ElSpace>
     </ElAlert>
-    <ElAlert v-else-if="noMore" center type="success" :closable="false">
+    <ElAlert v-else-if="noMore" center type="info" :closable="false">
       <span>{{
         posts.length
           ? language.postListComponent.noMore
           : language.postListComponent.none
       }}</span>
-      <ElButton
-        @click="update"
-        icon="refresh"
-        color="var(--el-color-success)"
-        text
-        plain
-      />
+      <ElButton @click="update" icon="refresh" text plain />
     </ElAlert>
   </ElScrollbar>
   <ElBacktop :target="backTopTarget" />
@@ -149,6 +143,7 @@ async function failedGetPosts() {
 }
 
 .el-alert {
+  margin-top: 8px;
   height: 53px;
 
   .el-space {

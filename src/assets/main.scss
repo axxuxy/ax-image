@@ -16,10 +16,100 @@ a {
   text-decoration: none;
 }
 
-ul{
+ul {
   margin: 0;
   padding: 0;
 }
-li{
+
+li {
   list-style: none;
+}
+
+:root {
+  /// The colors corresponding to all tag type.
+  --tag-general: burlyWood;
+  --tag-artist: coral;
+  --tag-copyright: purple;
+  --tag-character: green;
+  --tag-circle: teal;
+  --tag-style: orange;
+  --tag-faults: red;
+
+  .--tag {
+    transition: opacity 200ms;
+
+    &.select {
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.54;
+      }
+    }
+
+    &,
+    &>.el-tag__close {
+      color: white;
+    }
+
+    &>.el-tag__close:hover {
+      background-color: white;
+    }
+
+
+    &.--tag-general {
+      background-color: var(--tag-general);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-general);
+      }
+    }
+
+    &.--tag-artist {
+      background-color: var(--tag-artist);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-artist);
+      }
+    }
+
+    &.--tag-copyright {
+      background-color: var(--tag-copyright);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-copyright);
+      }
+    }
+
+    &.--tag-character {
+      background-color: var(--tag-character);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-character);
+      }
+    }
+
+    &.--tag-circle {
+      background-color: var(--tag-circle);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-circle);
+      }
+    }
+
+    &.--tag-style {
+      background-color: var(--tag-style);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-style);
+      }
+    }
+
+    &.--tag-faults {
+      background-color: var(--tag-faults);
+
+      &>.el-tag__close:hover {
+        color: var(--tag-faults);
+      }
+    }
+  }
 }

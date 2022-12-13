@@ -1,5 +1,6 @@
 import _zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import { Website } from "@/utils/website";
+import { TagType } from "@/utils/api";
 
 function addAllValues<T extends { [key: string]: string }>(
   values: T & { all?: never },
@@ -10,17 +11,17 @@ function addAllValues<T extends { [key: string]: string }>(
 
 const websites = (() => {
   const websites: { [key: string]: string } = {};
-  (Object.keys(Website) as Array<keyof typeof Website>).forEach((key) => {
-    switch (Website[key]) {
+  Object.values(Website).forEach((value) => {
+    switch (value) {
       case Website.konachan:
-        return (websites[key] = "K站");
+        return (websites[value] = "K站");
       case Website.yande:
-        return (websites[key] = "Y站");
+        return (websites[value] = "Y站");
       default:
-        throw new Error(`Need add the website ${key} alias.`);
+        throw new Error(`Need add the website ${value} alias.`);
     }
   });
-  return Object.freeze(websites) as { [key in keyof typeof Website]: string };
+  return websites as { [key in Website]: string };
 })();
 
 enum DownloadStates {
@@ -94,6 +95,44 @@ const postListComponent = {
   none: "没有符合条件的帖子...",
 };
 
+const tagTypes = (() => {
+  const tagTypes: { [key: string]: string } = {};
+  Object.values(TagType).forEach((type) => {
+    switch (type) {
+      case TagType.artist:
+        tagTypes[type] = "艺术家";
+        break;
+      case TagType.character:
+        tagTypes[type] = "角色";
+        break;
+      case TagType.circle:
+        tagTypes[type] = "社团";
+        break;
+      case TagType.copyright:
+        tagTypes[type] = "版权";
+        break;
+      case TagType.faults:
+        tagTypes[type] = "瑕疵";
+        break;
+      case TagType.general:
+        tagTypes[type] = "普通";
+        break;
+      case TagType.style:
+        tagTypes[type] = "风格";
+        break;
+      default:
+        throw new Error(
+          `Undefinde the tag type name, the tag type is ${type}.`
+        );
+    }
+  });
+  return tagTypes as { [key in TagType]: string };
+})();
+const filterTagComponent = {
+  none: "没有符合条件的标签...",
+  tagTypes,
+};
+
 const zhCn = {
   name: "中文",
   elementPlus: _zhCn,
@@ -101,6 +140,7 @@ const zhCn = {
   settingsPage,
   homePage,
   postListComponent,
+  filterTagComponent,
 };
 
 export const i18n: {
