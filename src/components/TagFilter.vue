@@ -4,6 +4,8 @@ import type { Website } from "@/utils/website";
 import { ref } from "vue";
 import AutocompleteInputTagVue from "@/components/tools/AddTag.vue";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
+import { storeToRefs } from "pinia";
+import { useLanguage } from "@/stores/language";
 
 export interface TagFilterOptions extends TagsOptions {
   tags?: Array<Tag>;
@@ -18,6 +20,8 @@ const emit = defineEmits({
   search: (value: TagFilterOptions) => value && true,
   close: () => true,
 });
+
+const { language } = storeToRefs(useLanguage());
 
 const tags = ref(props.modelValue?.tags ?? []);
 
@@ -50,6 +54,7 @@ function search() {
         @close="removeTag(tag)"
         disable-transitions
         :class="['--tag', `--tag-${tag.type}`]"
+        :title="language.filterTagComponent.tagTypes[tag.type]"
       >
         <ElIcon v-if="tag.mode === TagMode.is">+</ElIcon>
         <ElIcon v-else-if="tag.mode === TagMode.not">-</ElIcon>

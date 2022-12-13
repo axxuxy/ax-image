@@ -89,6 +89,7 @@ function select(tag: Tag) {
         <ElIcon>
           <Plus />
         </ElIcon>
+        <span>{{ language.filterTagComponent.addTag }}</span>
       </ElButton>
     </template>
     <div class="loading" v-if="loadingTags">
@@ -143,6 +144,6 @@ function select(tag: Tag) {
 
 .show-input,
 .input {
-  width: 80px;
+  width: 84px;
 }
 </style>

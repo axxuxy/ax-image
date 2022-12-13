@@ -100,25 +100,25 @@ const tagTypes = (() => {
   Object.values(TagType).forEach((type) => {
     switch (type) {
       case TagType.artist:
-        tagTypes[type] = "艺术家";
+        tagTypes[type] = "艺术家标签";
         break;
       case TagType.character:
-        tagTypes[type] = "角色";
+        tagTypes[type] = "角色标签";
         break;
       case TagType.circle:
-        tagTypes[type] = "社团";
+        tagTypes[type] = "社团标签";
         break;
       case TagType.copyright:
-        tagTypes[type] = "版权";
+        tagTypes[type] = "版权标签";
         break;
       case TagType.faults:
-        tagTypes[type] = "瑕疵";
+        tagTypes[type] = "瑕疵标签";
         break;
       case TagType.general:
-        tagTypes[type] = "普通";
+        tagTypes[type] = "普通标签";
         break;
       case TagType.style:
-        tagTypes[type] = "风格";
+        tagTypes[type] = "风格标签";
         break;
       default:
         throw new Error(
@@ -131,6 +131,7 @@ const tagTypes = (() => {
 const filterTagComponent = {
   none: "没有符合条件的标签...",
   tagTypes,
+  addTag: "添加标签",
 };
 
 const zhCn = {
