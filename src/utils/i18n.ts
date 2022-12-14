@@ -201,6 +201,68 @@ const ratings = (() => {
   });
   return ratings as { [key in RatingValue]: RatingModeText };
 })();
+
+export interface RangeOrValueText {
+  rangeMode: string;
+  valueMode: string;
+  min: string;
+  max: string;
+  value: string;
+}
+
+const rangeOrValue: {
+  [key in
+    | "id"
+    | "width"
+    | "height"
+    | "score"
+    | "mpixels"
+    | "date"]: RangeOrValueText;
+} = {
+  id: {
+    rangeMode: "ID范围",
+    valueMode: "指定ID",
+    min: "最小ID",
+    max: "最大ID",
+    value: "输入ID",
+  },
+  width: {
+    rangeMode: "宽度范围",
+    valueMode: "指定宽度",
+    min: "最小宽度",
+    max: "最大宽度",
+    value: "输入宽度",
+  },
+  height: {
+    rangeMode: "高度范围",
+    valueMode: "指定高度",
+    min: "最小高度",
+    max: "最大高度",
+    value: "输入高度",
+  },
+  score: {
+    rangeMode: "评分范围",
+    valueMode: "指定评分",
+    min: "最小评分",
+    max: "最大评分",
+    value: "输入评分",
+  },
+  mpixels: {
+    rangeMode: "像素范围",
+    valueMode: "指定像素",
+    min: "最小像素",
+    max: "最大像素",
+    value: "输入像素",
+  },
+  date: {
+    rangeMode: "日期范围",
+    valueMode: "指定日期",
+    min: "起始时间",
+    max: "终止时间",
+    value: "选择日期",
+  },
+};
+
 const filterTagComponent = {
   none: "没有符合条件的标签...",
   tagTypes,
@@ -214,6 +276,7 @@ const filterTagComponent = {
   vote3Input: "收藏者",
   md5Input: "帖子md5",
   sourceInput: "来源出处",
+  rangeOrValue,
 };
 
 const zhCn = {

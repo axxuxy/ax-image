@@ -48,7 +48,7 @@ function formatRating(rating: Rating) {
   return [rating.mode, ["rating", rating.value].join(":")].join("");
 }
 
-type RangeValue = number | Date;
+export type RangeValue = number | Date;
 type Range<T extends RangeValue> =
   | {
       min?: T;
@@ -62,7 +62,7 @@ type Range<T extends RangeValue> =
       min: T;
       max: T;
     };
-type RangeOrValue<T extends RangeValue> = T | Range<T>;
+export type RangeOrValue<T extends RangeValue> = T | Range<T>;
 
 function formatRangeValue(value?: RangeValue): string {
   if (typeof value === "number") return value.toString();

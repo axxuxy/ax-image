@@ -3,6 +3,7 @@ import {
   RatingMode,
   RatingValue,
   TagMode,
+  type RangeOrValue as RangeOrValueType,
   type TagsOptions,
 } from "@/utils/format_tags";
 import type { Website } from "@/utils/website";
@@ -11,6 +12,7 @@ import AutocompleteInputTagVue from "@/components/tools/AddTag.vue";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
 import { storeToRefs } from "pinia";
 import { useLanguage } from "@/stores/language";
+import RangeOrValue from "@/components/tools/RangeOrValue.vue";
 
 export interface TagFilterOptions extends TagsOptions {
   tags?: Array<Tag>;
@@ -76,6 +78,13 @@ const rating = ref(
 );
 const source = ref<string | undefined>(props.modelValue?.source);
 
+const id = ref<RangeOrValueType<number>>();
+const width = ref<RangeOrValueType<number>>();
+const height = ref<RangeOrValueType<number>>();
+const score = ref<RangeOrValueType<number>>();
+const mpixels = ref<RangeOrValueType<number>>();
+const date = ref<RangeOrValueType<Date>>();
+
 function search() {
   emit("search", {
     tags: tags.value,
@@ -84,6 +93,12 @@ function search() {
     md5: md5.value,
     rating: rating.value,
     source: source.value,
+    id: id.value,
+    width: width.value,
+    height: height.value,
+    score: score.value,
+    mpixels: mpixels.value,
+    date: date.value,
   });
 }
 </script>
@@ -165,6 +180,50 @@ function search() {
           <span>{{ language.filterTagComponent.sourceInput }}</span>
         </template>
       </ElInput>
+      <RangeOrValue
+        type="number"
+        v-model="id"
+        :text="language.filterTagComponent.rangeOrValue.id"
+        :number-min="1"
+        :number-step="1"
+        number-step-strictly
+      />
+      <RangeOrValue
+        type="number"
+        v-model="width"
+        :text="language.filterTagComponent.rangeOrValue.width"
+        :number-min="0"
+        :number-step="1"
+        number-step-strictly
+      />
+      <RangeOrValue
+        type="number"
+        v-model="height"
+        :text="language.filterTagComponent.rangeOrValue.height"
+        :number-min="0"
+        :number-step="1"
+        number-step-strictly
+      />
+      <RangeOrValue
+        type="number"
+        v-model="score"
+        :text="language.filterTagComponent.rangeOrValue.score"
+        :number-min="0"
+        :number-step="1"
+        number-step-strictly
+      />
+      <RangeOrValue
+        type="number"
+        v-model="mpixels"
+        :text="language.filterTagComponent.rangeOrValue.mpixels"
+        :number-min="0"
+      />
+      <RangeOrValue
+        type="date"
+        v-model="date"
+        :text="language.filterTagComponent.rangeOrValue.date"
+        date-disable-after
+      />
     </ElSpace>
     <ElSpace style="justify-content: end">
       <ElButton circle @click="search" icon="search"></ElButton>
