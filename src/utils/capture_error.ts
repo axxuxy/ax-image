@@ -107,9 +107,9 @@ window.addEventListener(
       const errorInfo: EventErrorInfo = {
         date: new Date(),
         type: ErrorType.event,
-        message: event.error.message,
-        stack: event.error.stack,
-        name: event.error.name,
+        message: event.error?.message,
+        stack: event.error?.stack,
+        name: event.error?.name,
         eventMessage: event.message,
         filename: event.filename,
         lineno: event.lineno,
