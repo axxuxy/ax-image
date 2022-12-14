@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { TagMode, type TagsOptions } from "@/utils/format_tags";
 import type { Website } from "@/utils/website";
-import { ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import AutocompleteInputTagVue from "@/components/tools/AddTag.vue";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
 import { storeToRefs } from "pinia";
@@ -42,6 +42,13 @@ function search() {
     tags: tags.value,
   });
 }
+
+const modes = computed(() => Object.values(TagMode));
+
+function changeTagMode({ tag, mode }: { tag: Tag; mode: TagMode }) {
+  tag.mode = mode;
+  nextTick();
+}
 </script>
 
 <template>
@@ -56,9 +63,27 @@ function search() {
         :class="['--tag', `--tag-${tag.type}`]"
         :title="language.filterTagComponent.tagTypes[tag.type]"
       >
-        <ElIcon v-if="tag.mode === TagMode.is">+</ElIcon>
-        <ElIcon v-else-if="tag.mode === TagMode.not">-</ElIcon>
-        <ElIcon v-else-if="tag.mode === TagMode.or">~</ElIcon>
+        <ElDropdown trigger="click" @command="changeTagMode" class="--tag-mode">
+          <ElIcon v-if="tag.mode === TagMode.is">+</ElIcon>
+          <ElIcon v-else-if="tag.mode === TagMode.not">-</ElIcon>
+          <ElIcon v-else-if="tag.mode === TagMode.or">~</ElIcon>
+          <template #dropdown>
+            <ElDropdownMenu>
+              <ElDropdownItem
+                v-for="mode in modes"
+                :key="mode"
+                :command="{ tag, mode }"
+              >
+                <ElIcon v-if="mode === TagMode.is">+</ElIcon>
+                <ElIcon v-else-if="mode === TagMode.not">-</ElIcon>
+                <ElIcon v-else-if="mode === TagMode.or">~</ElIcon>
+                <span>
+                  {{ language.filterTagComponent.tagModes[mode] }}
+                </span>
+              </ElDropdownItem>
+            </ElDropdownMenu>
+          </template>
+        </ElDropdown>
         <span>{{ tag.name }}</span>
         <span> - </span>
         <span>{{ tag.count }}</span>
@@ -78,5 +103,9 @@ function search() {
 <style lang="scss" scoped>
 .tags-box {
   width: 100%;
+  .--tag-mode {
+    margin-left: -4px;
+    margin-right: 4px;
+  }
 }
 </style>

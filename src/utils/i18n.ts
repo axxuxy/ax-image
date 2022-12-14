@@ -1,6 +1,7 @@
 import _zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import { Website } from "@/utils/website";
 import { TagType } from "@/utils/api";
+import { TagMode } from "./format_tags";
 
 function addAllValues<T extends { [key: string]: string }>(
   values: T & { all?: never },
@@ -128,10 +129,31 @@ const tagTypes = (() => {
   });
   return tagTypes as { [key in TagType]: string };
 })();
+
+const tagModes = (() => {
+  const modes: { [key: string]: string } = {};
+  Object.values(TagMode).forEach((mode) => {
+    switch (mode) {
+      case TagMode.is:
+        modes[mode] = "必须包含标签";
+        break;
+      case TagMode.not:
+        modes[mode] = "排除标签";
+        break;
+      case TagMode.or:
+        modes[mode] = "或者包含标签";
+        break;
+      default:
+        throw new Error(`Undefinded the mode, the mode is ${mode}.`);
+    }
+  });
+  return modes as { [key in TagMode]: string };
+})();
 const filterTagComponent = {
   none: "没有符合条件的标签...",
   tagTypes,
   addTag: "添加标签",
+  tagModes,
 };
 
 const zhCn = {

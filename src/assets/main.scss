@@ -47,7 +47,8 @@ li {
     }
 
     &,
-    &>.el-tag__close {
+    &>.el-tag__close,
+    .--tag-mode {
       color: white;
     }
 
