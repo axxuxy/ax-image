@@ -8,9 +8,12 @@ export interface ValueType {
   number: number;
 }
 
+export type ModelValue<T extends keyof ValueType = keyof ValueType> =
+  RangeOrValue<ValueType[T]> | null;
+
 export interface Props<T extends keyof ValueType = keyof ValueType> {
   type: T;
-  modelValue?: RangeOrValue<ValueType[T]>;
+  modelValue?: ModelValue<T>;
   text: RangeOrValueText;
   dateDisableAfter?: boolean;
   numberMin?: number;
@@ -65,25 +68,41 @@ const min = ref();
 const max = ref();
 const value = ref();
 
-/// listen value change and emit update.
-function emitValue() {
+const modelValue = computed(() => {
   switch (mode.value) {
     case Mode.range:
-      if (min.value || max.value)
-        emit("update:modelValue", {
-          min: min.value,
-          max: max.value,
-        });
-      else emit("update:modelValue", undefined);
-      break;
+      if (min.value || max.value) return { min: min.value, max: max.value };
+      else return null;
     case Mode.value:
-      emit("update:modelValue", value.value);
-      break;
+      return value.value;
     default:
       throw new Error(`Undefined the mode, the mode is ${mode.value}.`);
   }
+});
+/// Listen value change and emit update.
+watch(modelValue, (_) => {
+  emit("update:modelValue", _);
+});
+
+/// Listen model value change and update value.
+function setValue(_: typeof props.modelValue) {
+  if (_ === modelValue.value) return;
+  if (_ === undefined || _ instanceof Date || typeof _ === "number") {
+    mode.value = Mode.value;
+    value.value = _;
+  } else {
+    mode.value = Mode.range;
+    if (_) {
+      max.value = _.max;
+      min.value = _.min;
+    } else max.value = min.value = undefined;
+  }
 }
-watch([min, max, value, mode], emitValue);
+watch(
+  computed(() => props.modelValue),
+  setValue,
+  { immediate: true }
+);
 
 function disabledNowAfter(date: Date) {
   return props.dateDisableAfter ? date > new Date() : false;
@@ -204,6 +223,11 @@ function disabledMaxDate(date: Date) {
       border-bottom-left-radius: 0;
       background-color: transparent;
       box-shadow: none;
+
+      input {
+        text-align: center;
+        width: 80px;
+      }
     }
   }
 

@@ -50,6 +50,7 @@ li {
     &>.el-tag__close,
     .--tag-mode {
       color: white;
+      vertical-align: baseline;
     }
 
     &>.el-tag__close:hover {

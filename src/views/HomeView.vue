@@ -36,12 +36,29 @@ watch(update, async (value) => {
 });
 
 function search(_: TagFilterOptions) {
+  console.log(_);
+  showFilter.value = false;
   tagOptions.value = _;
 }
 </script>
 
 <template>
   <ElContainer class="container">
+    <ElDrawer
+      v-model="showFilter"
+      direction="ttb"
+      :with-header="false"
+      size="auto"
+      style="max-height: 100%"
+    >
+      <TagFilter
+        class="filter"
+        v-model="tagOptions"
+        :website="config.website"
+        @close="showFilter = false"
+        @search="search"
+      />
+    </ElDrawer>
     <ElHeader height="auto">
       <ElPageHeader :class="{ 'filter-is-hidden': !showFilter }">
         <template #title>
@@ -87,14 +104,6 @@ function search(_: TagFilterOptions) {
             </ElLink>
           </ElSpace>
         </template>
-        <TagFilter
-          class="filter"
-          v-model="tagOptions"
-          v-show="showFilter"
-          :website="config.website"
-          @close="showFilter = false"
-          @search="search"
-        />
       </ElPageHeader>
     </ElHeader>
     <ElMain>
@@ -119,18 +128,14 @@ function search(_: TagFilterOptions) {
     display: flex;
     min-height: 60px;
     align-items: center;
-    margin: 0;
     border-bottom: 1px solid var(--el-border-color);
     background-color: #fff;
     z-index: 10;
 
     .el-page-header {
       width: 100%;
-      box-sizing: border-box;
 
       :deep(.el-page-header__header) {
-        min-height: 60px;
-
         .el-page-header__icon {
           display: none;
         }
@@ -149,21 +154,6 @@ function search(_: TagFilterOptions) {
         font-family: "freescpt";
         font-size: 36px;
         white-space: nowrap;
-      }
-
-      &.filter-is-hidden {
-        :deep(.el-page-header__main) {
-          border-top: none;
-        }
-      }
-
-      :deep(.el-page-header__main) {
-        margin: 0;
-      }
-
-      .filter {
-        box-sizing: border-box;
-        padding: 12px;
       }
     }
   }

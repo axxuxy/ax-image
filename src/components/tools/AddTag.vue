@@ -75,17 +75,11 @@ function select(tag: Tag) {
       <ElInput
         v-if="showInputTag"
         class="input"
-        size="small"
         v-model="tagInput"
         @blur="tagInputBlur"
         ref="input"
       />
-      <ElButton
-        v-else
-        class="show-input"
-        size="small"
-        @click="showInputTag = true"
-      >
+      <ElButton v-else class="show-input" @click="showInputTag = true">
         <ElIcon>
           <Plus />
         </ElIcon>
@@ -144,6 +138,6 @@ function select(tag: Tag) {
 
 .show-input,
 .input {
-  width: 84px;
+  width: 120px;
 }
 </style>

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import {
+  Order,
   RatingMode,
   RatingValue,
   TagMode,
-  type RangeOrValue as RangeOrValueType,
   type TagsOptions,
 } from "@/utils/format_tags";
 import type { Website } from "@/utils/website";
@@ -12,7 +12,10 @@ import AutocompleteInputTagVue from "@/components/tools/AddTag.vue";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
 import { storeToRefs } from "pinia";
 import { useLanguage } from "@/stores/language";
-import RangeOrValue from "@/components/tools/RangeOrValue.vue";
+import RangeOrValue, {
+  type ModelValue,
+} from "@/components/tools/RangeOrValue.vue";
+import Clear from "@/assets/clear.svg?component";
 
 export interface TagFilterOptions extends TagsOptions {
   tags?: Array<Tag>;
@@ -30,7 +33,7 @@ const emit = defineEmits({
 
 const { language } = storeToRefs(useLanguage());
 
-const tags = ref(props.modelValue?.tags ?? []);
+const tags = ref<Array<Tag>>([]);
 
 /// Add tag and remove tag function.
 function selectTag(tag: Tag) {
@@ -44,16 +47,16 @@ function removeTag(tag: Tag | { type: string }) {
   tags.value = tags.value.filter((_) => _ !== tag);
 }
 
-const modes = computed(() => Object.values(TagMode));
+const modes = Object.values(TagMode);
 
 function changeTagMode({ tag, mode }: { tag: Tag; mode: TagMode }) {
   tag.mode = mode;
   nextTick();
 }
 
-const user = ref<string | undefined>(props.modelValue?.user);
-const vote3 = ref<string | undefined>(props.modelValue?.["vote:3"]);
-const md5 = ref<string | undefined>(props.modelValue?.md5);
+const user = ref<string | undefined>();
+const vote3 = ref<string | undefined>();
+const md5 = ref<string | undefined>();
 const ratings = computed(() => {
   const modes = Object.values(RatingMode);
   return Object.values(RatingValue)
@@ -67,44 +70,86 @@ const ratings = computed(() => {
     )
     .flatMap((ratings) => ratings);
 });
-const rating = ref(
-  props.modelValue?.rating
+const rating = ref<typeof ratings.value[number]>();
+const source = ref<string | undefined>();
+
+const id = ref<ModelValue<"number">>();
+const width = ref<ModelValue<"number">>();
+const height = ref<ModelValue<"number">>();
+const score = ref<ModelValue<"number">>();
+const mpixels = ref<ModelValue<"number">>();
+const date = ref<ModelValue<"date">>();
+
+const orders = Object.values(Order).map((order) => ({
+  order,
+  text: language.value.filterTagComponent.order.values[order],
+}));
+const order = ref<Order>();
+
+const parent = ref<number>();
+const parentNone = ref(false);
+
+function clear() {
+  setTags({});
+}
+function reset() {
+  setTags(props.modelValue ?? {});
+}
+
+function setTags(option: TagFilterOptions) {
+  tags.value = option.tags ?? [];
+  user.value = option.user;
+  vote3.value = option["vote:3"];
+  md5.value = option.md5;
+  rating.value = props.modelValue?.rating
     ? ratings.value.find(
         (rating) =>
           rating.mode === props.modelValue!.rating?.mode &&
           rating.value === props.modelValue!.rating.value
       )
-    : undefined
-);
-const source = ref<string | undefined>(props.modelValue?.source);
-
-const id = ref<RangeOrValueType<number>>();
-const width = ref<RangeOrValueType<number>>();
-const height = ref<RangeOrValueType<number>>();
-const score = ref<RangeOrValueType<number>>();
-const mpixels = ref<RangeOrValueType<number>>();
-const date = ref<RangeOrValueType<Date>>();
+    : undefined;
+  source.value = option.source;
+  id.value = option.id;
+  width.value = option.width;
+  height.value = option.height;
+  score.value = option.score;
+  mpixels.value = option.mpixels;
+  date.value = option.date;
+  order.value = option.order;
+  parent.value = option.parent || undefined;
+  parentNone.value = option.parent === false;
+}
 
 function search() {
-  emit("search", {
-    tags: tags.value,
-    user: user.value,
-    "vote:3": vote3.value,
-    md5: md5.value,
-    rating: rating.value,
-    source: source.value,
-    id: id.value,
-    width: width.value,
-    height: height.value,
-    score: score.value,
-    mpixels: mpixels.value,
-    date: date.value,
-  });
+  const data: TagFilterOptions = {};
+  if (tags.value.length) data.tags = tags.value;
+  if (user.value) data.user = user.value;
+  if (vote3.value) data["vote:3"] = vote3.value;
+  if (md5.value) data.md5 = md5.value;
+  if (rating.value) data.rating = rating.value;
+  if (source.value) data.source = source.value;
+  if (id.value) data.id = id.value;
+  if (width.value) data.width = width.value;
+  if (height.value) data.height = height.value;
+  if (score.value) data.score = score.value;
+  if (mpixels.value) data.mpixels = mpixels.value;
+  if (date.value) data.date = date.value;
+  if (order.value) data.order = order.value;
+  if (parent.value) data.parent = parent.value;
+  emit("search", data);
 }
+
+setTags(props.modelValue ?? {});
 </script>
 
 <template>
-  <ElSpace direction="vertical" class="tags-box" alignment="start" fill>
+  <ElSpace
+    direction="vertical"
+    class="tags-box"
+    alignment="start"
+    fill
+    size="large"
+  >
     <ElSpace wrap class="tag-list">
       <ElTag
         v-for="tag in tags"
@@ -114,6 +159,7 @@ function search() {
         disable-transitions
         :class="['--tag', `--tag-${tag.type}`]"
         :title="language.filterTagComponent.tagTypes[tag.type]"
+        size="large"
       >
         <ElDropdown trigger="click" @command="changeTagMode" class="--tag-mode">
           <ElIcon v-if="tag.mode === TagMode.is">+</ElIcon>
@@ -165,7 +211,6 @@ function search() {
         <template #prefix>
           <div class="prefix">
             <span>{{ language.filterTagComponent.rating.title }}</span>
-            <span> :</span>
           </div>
         </template>
         <ElOption
@@ -224,8 +269,45 @@ function search() {
         :text="language.filterTagComponent.rangeOrValue.date"
         date-disable-after
       />
+      <ElSelect v-model="order" clearable>
+        <template #prefix>
+          <div class="prefix">
+            <span>{{ language.filterTagComponent.order.title }}</span>
+          </div>
+        </template>
+        <ElOption
+          v-for="order in orders"
+          :key="order.order"
+          :value="order.order"
+          :label="order.text"
+        />
+      </ElSelect>
+      <div class="parent">
+        <div class="prepend">
+          <span>{{ language.filterTagComponent.parent }}</span>
+        </div>
+        <ElInputNumber
+          :disabled="parentNone"
+          v-model="parent"
+          :step="1"
+          step-strictly
+          :min="1"
+          :placeholder="language.filterTagComponent.parentInput"
+        ></ElInputNumber>
+      </div>
+      <ElCheckbox
+        v-model="parentNone"
+        :label="language.filterTagComponent.parentNone"
+        :border="true"
+      ></ElCheckbox>
     </ElSpace>
     <ElSpace style="justify-content: end">
+      <ElButton circle @click="reset" icon="refresh"></ElButton>
+      <ElButton circle @click="clear">
+        <ElIcon>
+          <Clear style="width: 1em; height: 1em; color: var(--color)" />
+        </ElIcon>
+      </ElButton>
       <ElButton circle @click="search" icon="search"></ElButton>
       <ElButton circle @click="emit('close')" icon="close"> </ElButton>
     </ElSpace>
@@ -242,7 +324,32 @@ function search() {
   }
 
   .prefix {
-    height: 30px;
+    height: 32px;
+  }
+
+  .parent {
+    border-radius: var(--el-input-border-radius, var(--el-border-radius-base));
+    background-color: var(--el-fill-color-light);
+    box-shadow: 0 0 0 1px var(--el-input-border-color, var(--el-border-color))
+      inset;
+
+    .prepend {
+      display: inline-block;
+      padding: 0 20px;
+      border-radius: var(--el-input-border-radius);
+      color: var(--el-color-info);
+      box-shadow: 1px 0 0 0 var(--el-input-border-color) inset,
+        0 1px 0 0 var(--el-input-border-color) inset,
+        0 -1px 0 0 var(--el-input-border-color) inset;
+      font-size: var(--el-font-size-base);
+    }
+
+    :deep(.el-input-number) {
+      .el-input__wrapper {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+    }
   }
 }
 </style>

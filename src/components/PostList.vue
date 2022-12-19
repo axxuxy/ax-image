@@ -79,11 +79,11 @@ async function failedGetPosts() {
       :infinite-scroll-disabled="loading || noMore"
     >
       <li v-for="post in posts" :key="post.id" class="post-item">
-        <ElImage
-          :src="post.preview_url"
-          class="post-preview"
-          fit="contain"
-        ></ElImage>
+        <RouterLink :to="`/post/${post.id}`">
+          <div class="post-preview">
+            <img :src="post.preview_url" />
+          </div>
+        </RouterLink>
         <span>{{ post.id }}</span>
       </li>
     </ul>
@@ -130,20 +130,29 @@ async function failedGetPosts() {
   padding-top: 8px;
 
   .post-item {
-    padding: 8px 4px 8px;
+    padding: 8px 4px;
     background-color: #eee;
     text-align-last: center;
 
     .post-preview {
-      display: block;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       height: 180px;
       padding-bottom: 8px;
+      user-select: none;
+      cursor: pointer;
+
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
     }
   }
 }
 
 .el-alert {
-  margin-top: 8px;
   height: 53px;
 
   .el-space {

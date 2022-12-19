@@ -1,7 +1,7 @@
 import _zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import { Website } from "@/utils/website";
 import { TagType } from "@/utils/api";
-import { RatingMode, RatingValue, TagMode } from "@/utils/format_tags";
+import { Order, RatingMode, RatingValue, TagMode } from "@/utils/format_tags";
 
 function addAllValues<T extends { [key: string]: string }>(
   values: T & { all?: never },
@@ -263,6 +263,44 @@ const rangeOrValue: {
   },
 };
 
+const orders = (() => {
+  const orders: { [key: string]: string } = {};
+  Object.values(Order).forEach((order) => {
+    switch (order) {
+      case Order.id:
+        orders[order] = "ID顺序";
+        break;
+      case Order.idDesc:
+        orders[order] = "ID降序";
+        break;
+      case Order.mpixels:
+        orders[order] = "像素倒序";
+        break;
+      case Order.mpixelsAsc:
+        orders[order] = "像素升序";
+        break;
+      case Order.score:
+        orders[order] = "评分倒序";
+        break;
+      case Order.scoreAsc:
+        orders[order] = "评分升序";
+        break;
+      case Order.landscape:
+        orders[order] = "宽比高";
+        break;
+      case Order.portrait:
+        orders[order] = "高比宽";
+        break;
+      case Order.vote:
+        orders[order] = "收藏者排序";
+        break;
+      default:
+        throw new Error(`Undefined the order text, the order is ${order}.`);
+    }
+  });
+  return orders as { [key in Order]: string };
+})();
+
 const filterTagComponent = {
   none: "没有符合条件的标签...",
   tagTypes,
@@ -277,6 +315,13 @@ const filterTagComponent = {
   md5Input: "帖子md5",
   sourceInput: "来源出处",
   rangeOrValue,
+  order: {
+    title: "帖子排序",
+    values: orders,
+  },
+  parent: "指定父帖子",
+  parentInput: "输入ID",
+  parentNone: "过滤子节点",
 };
 
 const zhCn = {
