@@ -13,7 +13,18 @@ const configs = computed(() =>
     name: language.value.homePage.websites[config.website],
   }))
 );
-const config = ref(configs.value[0]);
+const config = ref(
+  (() => {
+    const website = localStorage.getItem("website");
+    return (
+      configs.value.find((config) => config.website === website) ||
+      configs.value[0]
+    );
+  })()
+);
+watch(config, (_) => {
+  localStorage.setItem("website", _.website);
+});
 function websiteCommand(_: Config & { name: string }) {
   config.value = _;
 }
