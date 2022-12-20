@@ -26,10 +26,10 @@ const backTopTarget = computed(
 );
 
 let page = 1;
-async function getPosts() {
+async function getPosts(limit = 100) {
   if (noMore.value || getFailed.value) return;
   loading.value = true;
-  const option: GetPostsOption = { ...props.tagOptions, page };
+  const option: GetPostsOption = { ...props.tagOptions, page, limit };
   await _getPosts(props.website, option)
     .then((_) => {
       const postsId = posts.value.map((post) => post.id);
@@ -37,7 +37,7 @@ async function getPosts() {
         ...posts.value,
         ..._.filter((post) => !postsId.includes(post.id)),
       ];
-      if (_.length < 100) noMore.value = true;
+      if (_.length < limit) noMore.value = true;
       ++page;
     })
     .catch((error) => {
@@ -55,11 +55,13 @@ async function getPosts() {
     .finally(() => (loading.value = false));
 }
 
+/// FIXME In update, if no auto load full container.
 async function update() {
   if (loading.value) return;
   page = 0;
-  noMore.value = false;
   posts.value = [];
+  getFailed.value = false;
+  noMore.value = false;
   await getPosts();
 }
 

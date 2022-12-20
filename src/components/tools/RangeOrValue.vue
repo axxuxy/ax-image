@@ -201,6 +201,10 @@ function disabledMaxDate(date: Date) {
     inset;
   background-color: var(--el-input-bg-color, var(--el-fill-color-blank));
 
+  & > div:first-child {
+    width: 100%;
+  }
+
   .range {
     display: flex;
   }
@@ -208,6 +212,7 @@ function disabledMaxDate(date: Date) {
   .split {
     display: inline-block;
     width: 32px;
+    min-width: 32px;
     height: 32px;
     line-height: 30px;
     color: var(--el-color-info);
@@ -233,6 +238,8 @@ function disabledMaxDate(date: Date) {
 
   :deep(.el-input-number),
   :deep(.el-date-editor) {
+    width: 100%;
+
     .el-input__wrapper {
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;

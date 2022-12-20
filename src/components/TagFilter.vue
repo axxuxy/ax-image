@@ -135,7 +135,8 @@ function search() {
   if (mpixels.value) data.mpixels = mpixels.value;
   if (date.value) data.date = date.value;
   if (order.value) data.order = order.value;
-  if (parent.value) data.parent = parent.value;
+  if (parentNone.value) data.parent = false;
+  else if (parent.value) data.parent = parent.value;
   emit("search", data);
 }
 
@@ -191,116 +192,142 @@ setTags(props.modelValue ?? {});
         @select="selectTag"
       ></AutocompleteInputTagVue>
     </ElSpace>
-    <ElSpace wrap>
-      <ElInput v-model="user" clearable>
-        <template #prepend>
-          <span>{{ language.filterTagComponent.userInput }}</span>
-        </template>
-      </ElInput>
-      <ElInput v-model="vote3" clearable>
-        <template #prepend>
-          <span>{{ language.filterTagComponent.vote3Input }}</span>
-        </template>
-      </ElInput>
-      <ElInput v-model="md5" clearable>
-        <template #prepend>
-          <span>{{ language.filterTagComponent.md5Input }}</span>
-        </template>
-      </ElInput>
-      <ElSelect v-model="rating" clearable value-key="key" class="rating">
-        <template #prefix>
-          <div class="prefix">
-            <span>{{ language.filterTagComponent.rating.title }}</span>
-          </div>
-        </template>
-        <ElOption
-          v-for="rating in ratings"
-          :key="rating.key"
-          :value="rating"
-          :label="rating.text"
+    <ElRow :gutter="12" class="filter-tags">
+      <ElCol :xs="24" :sm="12" :lg="5">
+        <ElInput v-model="user" clearable>
+          <template #prepend>
+            <span>{{ language.filterTagComponent.userInput }}</span>
+          </template>
+        </ElInput>
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="5">
+        <ElInput v-model="vote3" clearable>
+          <template #prepend>
+            <span>{{ language.filterTagComponent.vote3Input }}</span>
+          </template>
+        </ElInput>
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="5">
+        <ElInput v-model="md5" clearable>
+          <template #prepend>
+            <span>{{ language.filterTagComponent.md5Input }}</span>
+          </template>
+        </ElInput>
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="4">
+        <ElSelect v-model="rating" clearable value-key="key">
+          <template #prefix>
+            <div class="prefix">
+              <span>{{ language.filterTagComponent.rating.title }}</span>
+            </div>
+          </template>
+          <ElOption
+            v-for="rating in ratings"
+            :key="rating.key"
+            :value="rating"
+            :label="rating.text"
+          />
+        </ElSelect>
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="5">
+        <ElInput v-model="source" clearable>
+          <template #prepend>
+            <span>{{ language.filterTagComponent.sourceInput }}</span>
+          </template>
+        </ElInput>
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="8" :xl="6">
+        <RangeOrValue
+          type="number"
+          v-model="id"
+          :text="language.filterTagComponent.rangeOrValue.id"
+          :number-min="1"
+          :number-step="1"
+          number-step-strictly
         />
-      </ElSelect>
-      <ElInput v-model="source" clearable>
-        <template #prepend>
-          <span>{{ language.filterTagComponent.sourceInput }}</span>
-        </template>
-      </ElInput>
-      <RangeOrValue
-        type="number"
-        v-model="id"
-        :text="language.filterTagComponent.rangeOrValue.id"
-        :number-min="1"
-        :number-step="1"
-        number-step-strictly
-      />
-      <RangeOrValue
-        type="number"
-        v-model="width"
-        :text="language.filterTagComponent.rangeOrValue.width"
-        :number-min="0"
-        :number-step="1"
-        number-step-strictly
-      />
-      <RangeOrValue
-        type="number"
-        v-model="height"
-        :text="language.filterTagComponent.rangeOrValue.height"
-        :number-min="0"
-        :number-step="1"
-        number-step-strictly
-      />
-      <RangeOrValue
-        type="number"
-        v-model="score"
-        :text="language.filterTagComponent.rangeOrValue.score"
-        :number-min="0"
-        :number-step="1"
-        number-step-strictly
-      />
-      <RangeOrValue
-        type="number"
-        v-model="mpixels"
-        :text="language.filterTagComponent.rangeOrValue.mpixels"
-        :number-min="0"
-      />
-      <RangeOrValue
-        type="date"
-        v-model="date"
-        :text="language.filterTagComponent.rangeOrValue.date"
-        date-disable-after
-      />
-      <ElSelect v-model="order" clearable>
-        <template #prefix>
-          <div class="prefix">
-            <span>{{ language.filterTagComponent.order.title }}</span>
-          </div>
-        </template>
-        <ElOption
-          v-for="order in orders"
-          :key="order.order"
-          :value="order.order"
-          :label="order.text"
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="8" :xl="6">
+        <RangeOrValue
+          type="number"
+          v-model="width"
+          :text="language.filterTagComponent.rangeOrValue.width"
+          :number-min="0"
+          :number-step="1"
+          number-step-strictly
         />
-      </ElSelect>
-      <div class="parent">
-        <div class="prepend">
-          <span>{{ language.filterTagComponent.parent }}</span>
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="8" :xl="6">
+        <RangeOrValue
+          type="number"
+          v-model="height"
+          :text="language.filterTagComponent.rangeOrValue.height"
+          :number-min="0"
+          :number-step="1"
+          number-step-strictly
+        />
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="8" :xl="6">
+        <RangeOrValue
+          type="number"
+          v-model="score"
+          :text="language.filterTagComponent.rangeOrValue.score"
+          :number-min="0"
+          :number-step="1"
+          number-step-strictly
+        />
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="8" :xl="6">
+        <RangeOrValue
+          type="number"
+          v-model="mpixels"
+          :text="language.filterTagComponent.rangeOrValue.mpixels"
+          :number-min="0"
+        />
+      </ElCol>
+      <ElCol :xs="24" :sm="24" :lg="8" :xl="6">
+        <RangeOrValue
+          type="date"
+          v-model="date"
+          :text="language.filterTagComponent.rangeOrValue.date"
+          date-disable-after
+        />
+      </ElCol>
+      <ElCol :xs="24" :sm="12" :lg="8" :xl="6">
+        <ElSelect v-model="order" clearable>
+          <template #prefix>
+            <div class="prefix">
+              <span>{{ language.filterTagComponent.order.title }}</span>
+            </div>
+          </template>
+          <ElOption
+            v-for="order in orders"
+            :key="order.order"
+            :value="order.order"
+            :label="order.text"
+          />
+        </ElSelect>
+      </ElCol>
+      <ElCol class="parent-box" :xs="24" :sm="12" :lg="8" :xl="6">
+        <div class="parent">
+          <div class="prepend">
+            <span>{{ language.filterTagComponent.parent }}</span>
+          </div>
+          <ElInputNumber
+            :disabled="parentNone"
+            v-model="parent"
+            :step="1"
+            step-strictly
+            :min="1"
+            :placeholder="language.filterTagComponent.parentInput"
+          ></ElInputNumber>
         </div>
-        <ElInputNumber
-          :disabled="parentNone"
-          v-model="parent"
-          :step="1"
-          step-strictly
-          :min="1"
-          :placeholder="language.filterTagComponent.parentInput"
-        ></ElInputNumber>
-      </div>
-      <ElCheckbox
-        v-model="parentNone"
-        :label="language.filterTagComponent.parentNone"
-        :border="true"
-      ></ElCheckbox>
-    </ElSpace>
+        <ElCheckbox
+          v-model="parentNone"
+          :label="language.filterTagComponent.parentNone"
+          :border="true"
+        ></ElCheckbox>
+      </ElCol>
+    </ElRow>
     <ElSpace style="justify-content: end">
       <ElButton circle @click="reset" icon="refresh"></ElButton>
       <ElButton circle @click="clear">
@@ -317,37 +344,63 @@ setTags(props.modelValue ?? {});
 <style lang="scss" scoped>
 .tags-box {
   width: 100%;
+  min-width: 360px;
 
   .--tag-mode {
     margin-left: -4px;
     margin-right: 4px;
   }
 
-  .prefix {
-    height: 32px;
-  }
+  .filter-tags {
+    margin-top: -8px;
 
-  .parent {
-    border-radius: var(--el-input-border-radius, var(--el-border-radius-base));
-    background-color: var(--el-fill-color-light);
-    box-shadow: 0 0 0 1px var(--el-input-border-color, var(--el-border-color))
-      inset;
-
-    .prepend {
-      display: inline-block;
-      padding: 0 20px;
-      border-radius: var(--el-input-border-radius);
-      color: var(--el-color-info);
-      box-shadow: 1px 0 0 0 var(--el-input-border-color) inset,
-        0 1px 0 0 var(--el-input-border-color) inset,
-        0 -1px 0 0 var(--el-input-border-color) inset;
-      font-size: var(--el-font-size-base);
+    & > div {
+      padding-top: 8px;
     }
 
-    :deep(.el-input-number) {
-      .el-input__wrapper {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
+    .el-select {
+      width: 100%;
+
+      .prefix {
+        line-height: 30px;
+      }
+    }
+
+    .parent-box {
+      display: flex;
+
+      .parent {
+        display: flex;
+        width: 100%;
+        margin-right: 12px;
+        border-radius: var(
+          --el-input-border-radius,
+          var(--el-border-radius-base)
+        );
+        background-color: var(--el-fill-color-light);
+        box-shadow: 0 0 0 1px
+          var(--el-input-border-color, var(--el-border-color)) inset;
+
+        .prepend {
+          padding: 0 20px;
+          border-radius: var(--el-input-border-radius);
+          color: var(--el-color-info);
+          box-shadow: 1px 0 0 0 var(--el-input-border-color) inset,
+            0 1px 0 0 var(--el-input-border-color) inset,
+            0 -1px 0 0 var(--el-input-border-color) inset;
+          font-size: var(--el-font-size-base);
+          line-height: 32px;
+          white-space: nowrap;
+        }
+
+        :deep(.el-input-number) {
+          width: 100%;
+
+          .el-input__wrapper {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+          }
+        }
       }
     }
   }

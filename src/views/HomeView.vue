@@ -36,7 +36,6 @@ watch(update, async (value) => {
 });
 
 function search(_: TagFilterOptions) {
-  console.log(_);
   showFilter.value = false;
   tagOptions.value = _;
 }
