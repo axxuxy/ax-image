@@ -16,6 +16,7 @@ import { main } from "./package.json";
 import { createServer } from "http";
 import type { AddressInfo } from "net";
 import { spawn } from "child_process";
+import svgLoader from "vite-svg-loader";
 
 declare global {
   namespace NodeJS {
@@ -30,6 +31,7 @@ export default defineConfig(({ command, mode }) => {
   const plugins: PluginOption = [
     vue(),
     vueJsx(),
+    svgLoader(),
     onService((url) => (process.env.DEV_URL = url)),
     mainElectron({
       output: dirname(resolve(main)),
@@ -83,7 +85,7 @@ export default defineConfig(({ command, mode }) => {
         };
       },
     });
-    if (!process.env.VITEST)
+    if (mode === "devtools")
       plugins.push(
         (() => {
           const serve = createServer().listen(0);
@@ -110,7 +112,7 @@ export default defineConfig(({ command, mode }) => {
               htmlLine.splice(
                 index,
                 0,
-                `<script>window.__VUE_DEVTOOLS_PORT__ = ${process.env.PORT}</script>`,
+                `<script>window.__VUE_DEVTOOLS_HOST__ = 'localhost';window.__VUE_DEVTOOLS_PORT__ = ${process.env.PORT}</script>`,
                 htmlLine[index].replace(
                   /<.+/,
                   `<script src="http://localhost:${process.env.PORT}"></script>`

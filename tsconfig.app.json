@@ -14,7 +14,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": [
-      "ESNext"
+      "DOM"
     ],
     "composite": true,
     "baseUrl": ".",

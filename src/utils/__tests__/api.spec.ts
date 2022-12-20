@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPosts, getTags, TagOrder } from "@/utils/api";
+import { getPosts, getTags, TagOrder, type Post, type Tag } from "@/utils/api";
 import { Website } from "@/utils/website";
 import "@/utils/__tools__/request";
 import { setupServer } from "msw/node";
@@ -181,7 +181,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     async () => {
       for (const website of websites) {
         /// Get two tag, them certain has post.
-        const [{ name: tag }, { name: tag2 }] = await getTags(website, {
+        const [{ name }, { name: name2 }] = await getTags(website, {
           order: TagOrder.count,
           limit: 2,
         });
@@ -190,20 +190,20 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const tagPosts = await getPosts(website, {
           tags: [
             {
-              tag,
+              name,
               mode: TagMode.is,
             },
           ],
         });
         expect(
           tagPosts.length,
-          `Get posts use tag \`${tag}\` not find post, website is ${website}.`
+          `Get posts use tag \`${name}\` not find post, website is ${website}.`
         ).toBeTruthy();
         expect(
           tagPosts.every(
-            (post) => checkPost(post) && post.tags!.split(" ").includes(tag)
+            (post) => checkPost(post) && post.tags!.split(" ").includes(name)
           ),
-          `Get posts use tag \`${tag}\` has post not the tag \`${tag}\`, website is ${website}.`
+          `Get posts use tag \`${name}\` has post not the tag \`${name}\`, website is ${website}.`
         ).toBe(true);
 
         /// Test not tag.
@@ -212,16 +212,16 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
             tags: [
               /// Set has tag and not the tag, then not find post, else untrue.
               {
-                tag,
+                name,
                 mode: TagMode.is,
               },
               {
-                tag: tag,
+                name,
                 mode: TagMode.not,
               },
             ],
           }),
-          `Set not tag not work, in website ${website}, tag is ${tag}.`
+          `Set not tag not work, in website ${website}, tag is ${name}.`
         ).resolves.toEqual([]);
 
         /// Test or tag.
@@ -229,25 +229,25 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           getPosts(website, {
             tags: [
               {
-                tag,
+                name,
                 mode: TagMode.or,
               },
               {
-                tag: tag2,
+                name: name2,
                 mode: TagMode.or,
               },
             ],
           }),
-          `Did not find a post with only one of the set tags, in website ${website}, tags is ${tag} and ${tag2}`
+          `Did not find a post with only one of the set tags, in website ${website}, tags is ${name} and ${name2}`
         ).resolves.toSatisfy((posts) => {
           return (
             (posts as Array<Post>).some((post) => {
               const tags = post.tags.split(" ");
-              return tags.includes(tag) && !tags.includes(tag2);
+              return tags.includes(name) && !tags.includes(name2);
             }) &&
             (posts as Array<Post>).some((post) => {
               const tags = post.tags.split(" ");
-              return tags.includes(tag2) && !tags.includes(tag);
+              return tags.includes(name2) && !tags.includes(name);
             })
           );
         });
@@ -258,7 +258,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
             tags: [
               {
                 mode: TagMode.is,
-                tag: "*_*",
+                name: "*_*",
               },
             ],
           }),

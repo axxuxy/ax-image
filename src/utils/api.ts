@@ -1,5 +1,5 @@
 import Request from "@/utils/request";
-import { getBaseURLBySite, type Website } from "@/utils/website";
+import { getBaseURLBySite, Website } from "@/utils/website";
 import { formatTags, type TagsOptions, type Rating } from "@/utils/format_tags";
 
 export interface GetPostsOption extends TagsOptions {
@@ -10,6 +10,55 @@ export interface GetPostsOption extends TagsOptions {
 let rating: Rating | undefined;
 export function setRating(_?: Rating) {
   rating = _;
+}
+
+export interface Post {
+  id: number;
+  tags: string;
+  created_at: number;
+  creator_id: number;
+  author: string;
+  change: number;
+  source: string;
+  score: number;
+  md5: string;
+  file_size: number;
+  file_url: string;
+  is_shown_in_index: boolean;
+  preview_url: string;
+  preview_width: number;
+  preview_height: number;
+  actual_preview_width: number;
+  actual_preview_height: number;
+  sample_url: string;
+  sample_width: number;
+  sample_height: number;
+  sample_file_size: number;
+  jpeg_url: string;
+  jpeg_width: number;
+  jpeg_height: number;
+  jpeg_file_size: number;
+  rating: string;
+  has_children: boolean;
+  parent_id: number | null;
+  status: string;
+  width: number;
+  height: number;
+  is_held: boolean;
+  frames_pending_string: string;
+  frames_pending: string[];
+  frames_string: string;
+  frames: string[];
+
+  /// Nexts is only in yande site.
+  updated_at?: number;
+  approver_id?: null;
+  file_ext?: string;
+  is_rating_locked?: boolean;
+  is_pending?: boolean;
+  is_note_locked?: boolean;
+  last_noted_at?: number;
+  last_commented_at?: number;
 }
 
 /**
@@ -60,6 +109,71 @@ type GetTagsOption = Pick<
   Exclude<keyof GetTagsFullOption, "page" | "namePattern">
 >;
 
+export enum TagType {
+  general = "general",
+  artist = "artist",
+  copyright = "copyright",
+  character = "character",
+  circle = "circle",
+  style = "style",
+  faults = "faults",
+}
+
+function getTagType(website: Website, type: number): TagType {
+  switch (type) {
+    case 0:
+      return TagType.general;
+    case 1:
+      return TagType.artist;
+    case 3:
+      return TagType.copyright;
+
+    case 4:
+      return TagType.character;
+
+    case 5:
+      switch (website) {
+        case Website.konachan:
+          return TagType.style;
+        case Website.yande:
+          return TagType.circle;
+        default:
+          throw new Error(
+            `In tag type value is 5, not set the site ${website} tag type, site is ${website}.`
+          );
+      }
+    case 6:
+      switch (website) {
+        case Website.konachan:
+          return TagType.circle;
+        case Website.yande:
+          return TagType.faults;
+        default:
+          throw new Error(
+            `In tag type value is 6, not set the site ${website} tag type, site is ${website}.`
+          );
+      }
+    default:
+      throw new Error(`Don't know the tag type, tag type value is ${type}.`);
+  }
+}
+
+interface ApiTag {
+  id: number;
+  name: string;
+  count: number;
+  type: number;
+  ambiguous: boolean;
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  count: number;
+  type: TagType;
+  ambiguous: boolean;
+}
+
 export async function getTags(
   website: Website,
   { limit, order, id, afterId, name }: GetTagsOption = {}
@@ -71,5 +185,8 @@ export async function getTags(
   if (id) url.searchParams.append("id", id.toString());
   if (afterId) url.searchParams.append("after_id", afterId.toString());
   if (name) url.searchParams.append("name", name);
-  return await new Request(url).getJson<Array<Tag>>();
+  return (await new Request(url).getJson<Array<ApiTag>>()).map((tag) => ({
+    ...tag,
+    type: getTagType(website, tag.type),
+  }));
 }

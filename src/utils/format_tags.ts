@@ -9,20 +9,20 @@ export enum TagMode {
 /**
  * @prop {string} tag Can use `*` as a wildcard.
  */
-interface Tag {
+export interface Tag {
   mode: TagMode;
-  tag: string;
+  name: string;
 }
 
-function formatTag({ mode, tag }: Tag) {
-  tag = tag.replace(/ /g, "_");
+function formatTag({ mode, name }: Tag) {
+  name = name.replace(/ /g, "_");
   switch (mode) {
     case TagMode.is:
-      return tag;
+      return name;
     case TagMode.or:
-      return `~${tag}`;
+      return `~${name}`;
     case TagMode.not:
-      return `-${tag}`;
+      return `-${name}`;
     default:
       throw new Error("Ubrealize the tag mode.");
   }
@@ -48,7 +48,7 @@ function formatRating(rating: Rating) {
   return [rating.mode, ["rating", rating.value].join(":")].join("");
 }
 
-type RangeValue = number | Date;
+export type RangeValue = number | Date;
 type Range<T extends RangeValue> =
   | {
       min?: T;
@@ -62,7 +62,7 @@ type Range<T extends RangeValue> =
       min: T;
       max: T;
     };
-type RangeOrValue<T extends RangeValue> = T | Range<T>;
+export type RangeOrValue<T extends RangeValue> = T | Range<T>;
 
 function formatRangeValue(value?: RangeValue): string {
   if (typeof value === "number") return value.toString();
