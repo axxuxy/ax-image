@@ -46,11 +46,11 @@ describe.concurrent("Test format tag module.", async () => {
       .map((tagMode) => [
         {
           mode: tagMode,
-          tag: randomStr(),
+          name: randomStr(),
         },
         {
           mode: tagMode,
-          tag: new Array(2 + Math.round(Math.random() * 3))
+          name: new Array(2 + Math.round(Math.random() * 3))
             .fill(null)
             .map(() => randomStr())
             .join(" "),
@@ -68,7 +68,7 @@ describe.concurrent("Test format tag module.", async () => {
     ).toBe(tags.length);
 
     tags.forEach((_) => {
-      let tag = _.tag.replace(/ /g, "_");
+      let tag = _.name.replace(/ /g, "_");
       switch (_.mode) {
         case TagMode.is:
           break;

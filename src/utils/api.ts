@@ -12,7 +12,7 @@ export function setRating(_?: Rating) {
   rating = _;
 }
 
-interface Post {
+export interface Post {
   id: number;
   tags: string;
   created_at: number;

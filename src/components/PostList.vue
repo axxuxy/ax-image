@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { useLanguage } from "@/stores/language";
-import { getPosts as _getPosts, type GetPostsOption } from "@/utils/api";
+import {
+  getPosts as _getPosts,
+  type GetPostsOption,
+  type Post,
+} from "@/utils/api";
 import type { TagsOptions } from "@/utils/format_tags";
 import type { Website } from "@/utils/website";
 import { ElMessage } from "element-plus";
@@ -18,7 +22,7 @@ const { language } = storeToRefs(useLanguage());
 const loading = ref(false);
 const getFailed = ref(false);
 const noMore = ref(false);
-const posts = ref<Awaited<ReturnType<typeof _getPosts>>>([]);
+const posts = ref<Array<Post>>([]);
 
 const scrollbarId = ref(`scrollbar-id-${Date.now()}`);
 const backTopTarget = computed(
