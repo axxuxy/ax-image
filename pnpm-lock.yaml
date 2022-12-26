@@ -13,6 +13,7 @@ specifiers:
   '@vue/eslint-config-typescript': ^11.0.2
   '@vue/test-utils': ^2.2.6
   '@vue/tsconfig': ^0.1.3
+  default-passive-events: ^2.0.0
   dexie: ^3.2.2
   electron: ^22.0.0
   electron-builder: ^23.6.0
@@ -33,7 +34,7 @@ specifiers:
   unplugin-auto-import: ^0.11.5
   unplugin-vue-components: ^0.22.12
   vite: ^3.2.5
-  vite-plugin-electron: git+https://axxuxy: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@github.com/axxuxy/vite-plugin-electron.git
+  vite-plugin-electron: git+https://axxuxy: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@github.com/axxuxy/vite-plugin-electron.git
   vite-svg-loader: ^3.6.0
   vitest: ^0.24.5
   vue: ^3.2.45
@@ -42,6 +43,7 @@ specifiers:
 
 dependencies:
   '@element-plus/icons-vue': registry.npmmirror.com/@element-plus/icons-vue/2.0.10_vue@3.2.45
+  default-passive-events: registry.npmmirror.com/default-passive-events/2.0.0
   dexie: registry.npmmirror.com/dexie/3.2.2
   element-plus: registry.npmmirror.com/element-plus/2.2.27_vue@3.2.45
   http-proxy-agent: registry.npmmirror.com/http-proxy-agent/5.0.0
@@ -77,16 +79,16 @@ devDependencies:
   unplugin-auto-import: registry.npmmirror.com/unplugin-auto-import/0.11.5
   unplugin-vue-components: registry.npmmirror.com/unplugin-vue-components/0.22.12_vue@3.2.45
   vite: registry.npmmirror.com/vite/3.2.5_zhd5mzpxwbr6rc5oea25y4oysa
-  vite-plugin-electron: axxuxy+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@github.com/axxuxy/vite-plugin-electron/e7dd7202c22853778d0b6789c4c6a24e1ebd047b_yjhkem7drpbbhyastvozv7lw3e
+  vite-plugin-electron: axxuxy+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@github.com/axxuxy/vite-plugin-electron/21ae26d2b0e0c35cd41c8927bcba01d37dbe1318_yjhkem7drpbbhyastvozv7lw3e
   vite-svg-loader: registry.npmmirror.com/vite-svg-loader/3.6.0
   vitest: registry.npmmirror.com/vitest/0.24.5_jsdom@20.0.3+sass@1.57.1
   vue-tsc: registry.npmmirror.com/vue-tsc/1.0.17_typescript@4.7.4
 
 packages:
 
-  axxuxy+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@github.com/axxuxy/vite-plugin-electron/e7dd7202c22853778d0b6789c4c6a24e1ebd047b_yjhkem7drpbbhyastvozv7lw3e:
-    resolution: {commit: e7dd7202c22853778d0b6789c4c6a24e1ebd047b, repo: https://axxuxy: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@github.com/axxuxy/vite-plugin-electron.git, type: git}
-    id: axxuxy+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@github.com/axxuxy/vite-plugin-electron/e7dd7202c22853778d0b6789c4c6a24e1ebd047b
+  axxuxy+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@github.com/axxuxy/vite-plugin-electron/21ae26d2b0e0c35cd41c8927bcba01d37dbe1318_yjhkem7drpbbhyastvozv7lw3e:
+    resolution: {commit: 21ae26d2b0e0c35cd41c8927bcba01d37dbe1318, repo: https://axxuxy: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@github.com/axxuxy/vite-plugin-electron.git, type: git}
+    id: axxuxy+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@github.com/axxuxy/vite-plugin-electron/21ae26d2b0e0c35cd41c8927bcba01d37dbe1318
     name: vite-plugin-electron
     version: 1.0.2
     requiresBuild: true
@@ -2705,6 +2707,12 @@ packages:
     version: 4.2.2
     engines: {node: '>=0.10.0'}
     dev: true
+
+  registry.npmmirror.com/default-passive-events/2.0.0:
+    resolution: {integrity: sha512-eMtt76GpDVngZQ3ocgvRcNCklUMwID1PaNbCNxfpDXuiOXttSh0HzBbda1HU9SIUsDc02vb7g9+3I5tlqe/qMQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/default-passive-events/-/default-passive-events-2.0.0.tgz}
+    name: default-passive-events
+    version: 2.0.0
+    dev: false
 
   registry.npmmirror.com/defaults/1.0.4:
     resolution: {integrity: sha512-eFuaLoy/Rxalv2kr+lqMlUnrDWV+3j4pljOIJgLIhI058IQfWJ7vXhyEIHu+HtC738klGALYxOKDO0bQP3tg8A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/defaults/-/defaults-1.0.4.tgz}

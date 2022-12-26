@@ -16,6 +16,9 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import { ipcRenderer } from "electron";
 import { useConfig } from "@/stores/config";
 
+import "default-passive-events";
+/// FIXME In open tags filter, more ... delay time.
+
 addErrorEventListener((errorInfo) => {
   console.error(errorInfo);
 });
