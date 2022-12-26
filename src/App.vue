@@ -6,15 +6,11 @@ const { language } = storeToRefs(useLanguage());
 </script>
 
 <template>
-  <ElScrollbar height="100vh" class="scrollbar">
-    <ElConfigProvider :locale="language.elementPlus">
-      <RouterView></RouterView>
-    </ElConfigProvider>
-  </ElScrollbar>
+  <ElConfigProvider :locale="language.elementPlus">
+    <RouterView v-slot="{ Component }">
+      <KeepAlive include="HomeView">
+        <component :is="Component" />
+      </KeepAlive>
+    </RouterView>
+  </ElConfigProvider>
 </template>
-
-<style lang="scss" scoped>
-.scrollbar > :deep(.el-scrollbar__bar) {
-  z-index: 10;
-}
-</style>

@@ -10,6 +10,8 @@ import type { Website } from "@/utils/website";
 import { ElMessage } from "element-plus";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
+import PostImage from "@/components/PostImage.vue";
+import type { Tag } from "@/components/tools/AddTagItem.vue";
 
 export interface PostListOptions {
   website: Website;
@@ -18,6 +20,10 @@ export interface PostListOptions {
 
 const props = defineProps<PostListOptions>();
 const { language } = storeToRefs(useLanguage());
+const emit = defineEmits<{
+  (event: "openChildren", id: number): void;
+  (event: "openTag", tag: Tag): void;
+}>();
 
 const loading = ref(false);
 const getFailed = ref(false);
@@ -75,9 +81,39 @@ async function failedGetPosts() {
   getFailed.value = false;
   await getPosts();
 }
+
+const openPost = ref<Post>();
+function setOpenPost(post?: Post) {
+  openPost.value = post;
+}
+/// XXX The can move other place.
+function openChildren(id: number) {
+  emit("openChildren", id);
+}
+function openTag(tag: Tag) {
+  emit("openTag", tag);
+}
 </script>
 
 <template>
+  <ElDrawer
+    :model-value="!!openPost"
+    direction="btt"
+    destroy-on-close
+    @closed="openPost = undefined"
+    size="100%"
+    :with-header="false"
+  >
+    <PostImage
+      v-if="openPost"
+      :website="website"
+      :post="openPost!"
+      @close="setOpenPost(undefined)"
+      @open-parent="setOpenPost"
+      @open-children="openChildren"
+      @open-tag="openTag"
+    />
+  </ElDrawer>
   <ElScrollbar height="100%" :id="scrollbarId" class="posts-box">
     <ul
       class="posts"
@@ -85,14 +121,13 @@ async function failedGetPosts() {
       :infinite-scroll-disabled="loading || noMore"
     >
       <li v-for="post in posts" :key="post.id" class="post-item">
-        <RouterLink :to="`/post/${post.id}`">
-          <div class="post-preview">
-            <img :src="post.preview_url" />
-          </div>
-        </RouterLink>
+        <div class="post-preview" @click="setOpenPost(post)">
+          <img :src="post.preview_url" />
+        </div>
         <span>{{ post.id }}</span>
       </li>
     </ul>
+    <!-- FIXME In alert with post list not have space. -->
     <ElAlert v-if="loading" class="loading" center :closable="false">
       <span>{{ language.postListComponent.loading }}</span>
       <ElIcon class="is-loading">

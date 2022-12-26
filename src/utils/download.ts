@@ -1,5 +1,6 @@
 import type { Website } from "@/utils/website";
 import Request from "@/utils/request";
+import type { Post } from "@/utils/api";
 
 const _downloads = new Set<Downloading>();
 export const getDownalods = () => Array.from(_downloads);

@@ -13,3 +13,17 @@ export function toYMD(date: Date, isUTC: boolean = false) {
         ]
   ).join("-");
 }
+
+export function toHMS(date: Date, isUTC = false) {
+  return (
+    isUTC
+      ? [date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
+      : [date.getHours(), date.getMinutes(), date.getSeconds()]
+  )
+    .map((_) => _.toString().padStart(2, "0"))
+    .join(":");
+}
+
+export function toYMDHMS(date: Date, isUTC = false) {
+  return `${toYMD(date, isUTC)} ${toHMS(date, isUTC)}`;
+}

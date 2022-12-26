@@ -1,4 +1,5 @@
 import { Website } from "@/utils/website";
+import type { Post } from "@/utils/api";
 const konachanPosts = [
   {
     id: 350038,
@@ -883,7 +884,7 @@ const konachanPosts = [
     frames_string: "",
     frames: [],
   },
-];
+] as Array<Post>;
 const yandePosts = [
   {
     id: 1040310,
@@ -2894,7 +2895,7 @@ const yandePosts = [
     last_noted_at: 0,
     last_commented_at: 0,
   },
-];
+] as Array<Post>;
 
 const websitePostsMap: Map<Website, Array<Post>> = new Map([
   [Website.konachan, konachanPosts],
