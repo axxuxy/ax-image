@@ -1,6 +1,11 @@
 import Request from "@/utils/request";
 import { getBaseURLBySite, Website } from "@/utils/website";
-import { formatTags, type TagsOptions, type Rating } from "@/utils/format_tags";
+import {
+  formatTags,
+  type TagsOptions,
+  type Rating,
+  RatingValue,
+} from "@/utils/format_tags";
 
 export interface GetPostsOption extends TagsOptions {
   limit?: number;
@@ -38,7 +43,7 @@ export interface Post {
   jpeg_width: number;
   jpeg_height: number;
   jpeg_file_size: number;
-  rating: string;
+  rating: RatingValue;
   has_children: boolean;
   parent_id: number | null;
   status: string;
@@ -180,10 +185,12 @@ export async function getTags(
 ): Promise<Array<Tag>> {
   const url = new URL(getBaseURLBySite(website));
   url.pathname = "tag.json";
-  if (limit) url.searchParams.append("limit", limit.toString());
+  if (typeof limit === "number")
+    url.searchParams.append("limit", limit.toString());
   if (order) url.searchParams.append("order", order);
-  if (id) url.searchParams.append("id", id.toString());
-  if (afterId) url.searchParams.append("after_id", afterId.toString());
+  if (typeof id === "number") url.searchParams.append("id", id.toString());
+  if (typeof afterId === "number")
+    url.searchParams.append("after_id", afterId.toString());
   if (name) url.searchParams.append("name", name);
   return (await new Request(url).getJson<Array<ApiTag>>()).map((tag) => ({
     ...tag,

@@ -6,6 +6,9 @@ import { storeToRefs } from "pinia";
 import TagFilter, { type TagFilterOptions } from "@/components/TagFilter.vue";
 import PostList from "@/components/PostList.vue";
 import { formatTags } from "@/utils/format_tags";
+import type { Tag } from "@/components/tools/AddTagItem.vue";
+import { useRouter } from "vue-router";
+
 const { language } = storeToRefs(useLanguage());
 const configs = computed(() =>
   _configs.map((config) => ({
@@ -50,6 +53,15 @@ function search(_: TagFilterOptions) {
   showFilter.value = false;
   tagOptions.value = _;
 }
+
+function openChildren(id: number) {
+  tagOptions.value = { parent: id };
+}
+function openTag(tag: Tag) {
+  tagOptions.value = { tags: [tag] };
+}
+
+const router = useRouter();
 </script>
 
 <template>
@@ -77,42 +89,38 @@ function search(_: TagFilterOptions) {
           </RouterLink>
         </template>
         <template #extra>
-          <ElSpace>
-            <ElDropdown split-button @command="websiteCommand">
-              <span>{{ config.name }}</span>
-              <template #dropdown>
-                <ElDropdownMenu>
-                  <ElDropdownItem
-                    v-for="config in configs"
-                    :key="config.website"
-                    :command="config"
-                    >{{ config.name }}
-                  </ElDropdownItem>
-                </ElDropdownMenu>
-              </template>
-            </ElDropdown>
-            <ElButton
-              icon="search"
-              @click="showFilter = true"
-              circle
-            ></ElButton>
-            <ElButton
-              icon="refresh-left"
-              @click="update = true"
-              :disabled="update"
-              circle
-            ></ElButton>
-            <ElLink :underline="false" href="/download">
-              <ElIcon size="20">
-                <Download />
-              </ElIcon>
-            </ElLink>
-            <ElLink :underline="false" href="/setting">
-              <ElIcon size="20">
-                <Setting />
-              </ElIcon>
-            </ElLink>
-          </ElSpace>
+          <ElDropdown split-button @command="websiteCommand">
+            <span>{{ config.name }}</span>
+            <template #dropdown>
+              <ElDropdownMenu>
+                <ElDropdownItem
+                  v-for="config in configs"
+                  :key="config.website"
+                  :command="config"
+                  >{{ config.name }}
+                </ElDropdownItem>
+              </ElDropdownMenu>
+            </template>
+          </ElDropdown>
+          <ElButton icon="search" @click="showFilter = true" circle></ElButton>
+          <ElButton
+            icon="refresh-left"
+            @click="update = true"
+            :disabled="update"
+            circle
+          ></ElButton>
+          <ElButton
+            @click="router.push('/download')"
+            icon="download"
+            circle
+            link
+          ></ElButton>
+          <ElButton
+            @click="router.push('/setting')"
+            icon="setting"
+            circle
+            link
+          ></ElButton>
         </template>
       </ElPageHeader>
     </ElHeader>
@@ -122,6 +130,8 @@ function search(_: TagFilterOptions) {
         :tag-options="tagOptions"
         :key="postsKey"
         ref="posts"
+        @open-children="openChildren"
+        @open-tag="openTag"
       >
       </PostList>
     </ElMain>
@@ -152,6 +162,17 @@ function search(_: TagFilterOptions) {
 
         .el-divider {
           display: none;
+        }
+
+        .el-page-header__extra {
+          & > div,
+          & > button {
+            margin-left: 12px;
+          }
+
+          & > *:nth-child(1) {
+            margin-left: 0;
+          }
         }
       }
 

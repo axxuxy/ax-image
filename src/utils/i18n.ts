@@ -2,6 +2,7 @@ import _zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import { Website } from "@/utils/website";
 import { TagType } from "@/utils/api";
 import { Order, RatingMode, RatingValue, TagMode } from "@/utils/format_tags";
+import { DownloadType } from "@/utils/download";
 
 function addAllValues<T extends { [key: string]: string }>(
   values: T & { all?: never },
@@ -75,6 +76,7 @@ const settingsPage = {
       title: "下载设置",
       downloadPath: "下载地址",
       changeDownload: "更改",
+      downloadMaxCount: "最大下载数量",
     }),
     rating: settingItem({
       title: "安全模式",
@@ -324,6 +326,41 @@ const filterTagComponent = {
   parentNone: "过滤子节点",
 };
 
+const downloadType = (() => {
+  const types: { [key: string]: string } = {};
+  Object.values(DownloadType).forEach((_) => {
+    switch (_) {
+      case DownloadType.sample:
+        types[_] = "下载样图";
+        return;
+      case DownloadType.jpeg:
+        types[_] = "下载jpeg";
+        return;
+      case DownloadType.file:
+        types[_] = "下载原图";
+        return;
+      default:
+        throw new Error(`Not have the download type, the type is ${_}.`);
+    }
+  });
+  return types as { [key in DownloadType]: string };
+})();
+
+const postImageComponent = {
+  uploadUser: "上传用户",
+  uploadDate: "上传时间",
+  size: "文件大小",
+  source: "来源地址",
+  rating: "安全等级",
+  score: "评分",
+  downloadType,
+  showParent: "查看父帖子",
+  showChildren: "查看子帖子",
+  getParentError: "获取父帖子异常",
+  addDownload: "添加下载",
+  yetDownload: "已添加下载",
+};
+
 const zhCn = {
   name: "中文",
   elementPlus: _zhCn,
@@ -332,6 +369,7 @@ const zhCn = {
   homePage,
   postListComponent,
   filterTagComponent,
+  postImageComponent,
 };
 
 export const i18n: {

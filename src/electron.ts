@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, protocol } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol } from "electron";
 import { existsSync, lstatSync } from "fs";
 import { join, resolve } from "path";
 
@@ -21,6 +21,13 @@ ipcMain.handle("set proxy", async (event, proxy: string) => {
 ipcMain.handle("clear proxy", async () => {
   await win!.webContents.session.setProxy({});
   await win!.webContents.session.forceReloadProxyConfig();
+});
+
+ipcMain.handle("select directory", async () => {
+  const result = await dialog.showOpenDialog(win!, {
+    properties: ["openDirectory", "createDirectory"],
+  });
+  return result.filePaths.length ? result.filePaths[0] : undefined;
 });
 
 protocol.registerSchemesAsPrivileged([
