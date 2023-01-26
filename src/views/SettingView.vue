@@ -12,24 +12,7 @@ const config = useConfig();
 const { downloadMaxCount, downloadSaveDir, rating } = storeToRefs(config);
 
 const router = useRouter();
-// interface SettingContent {
-//   [key: string]: string | SettingContent;
-// }
-
-// function search(
-//   str: string,
-//   content: SettingContent
-// ): Array<{ value: string; link: string }> {
-//   console.log(str, content);
-
-//   throw new Error("Need realize the function.");
-// }
-// function query(str: string, callback: Function) {
-//   callback(search(str, language.value.settingsPage.context));
-// }
-const proxyTypes = (
-  Object.keys(ProxyType) as Array<keyof typeof ProxyType>
-).map((key) => ProxyType[key]);
+const proxyTypes = Object.values(ProxyType).map((key) => ProxyType[key]);
 const proxyType = ref(config.proxy?.type);
 const proxyHost = ref(config.proxy?.host);
 const proxyPort = ref(config.proxy?.port);
@@ -110,14 +93,6 @@ function to(id: string) {
           <template #content>
             <h1>{{ language.settingsPage.title }}</h1>
           </template>
-          <!-- <template #extra>
-          <ElSpace>
-            <ElAutocomplete
-              :fetch-suggestions="query"
-              :placeholder="language.settingsPage.search"
-            ></ElAutocomplete>
-          </ElSpace>
-        </template> -->
         </ElPageHeader>
       </ElHeader>
       <ElContainer>
@@ -126,19 +101,19 @@ function to(id: string) {
             <ElMenu class="menu" @select="to">
               <ElMenuItem index="proxy">
                 <ElIcon>
-                  <Promotion />
+                  <i-ep-promotion />
                 </ElIcon>
                 <span>{{ language.settingsPage.context.proxy.title }}</span>
               </ElMenuItem>
               <ElMenuItem index="download">
                 <ElIcon>
-                  <Download />
+                  <i-ep-download />
                 </ElIcon>
                 <span>{{ language.settingsPage.context.download.title }}</span>
               </ElMenuItem>
               <ElMenuItem index="rating">
                 <ElIcon>
-                  <Umbrella />
+                  <i-ep-umbrella />
                 </ElIcon>
                 <span>{{ language.settingsPage.context.rating.title }}</span>
               </ElMenuItem>
@@ -215,7 +190,8 @@ function to(id: string) {
               <div class="download-count">
                 <div class="download-prepend">
                   <span>{{
-                    language.settingsPage.context.download.downloadMaxCount
+                    language.settingsPage.context.download
+                      .downloadConcurrentCount
                   }}</span>
                 </div>
                 <ElInputNumber

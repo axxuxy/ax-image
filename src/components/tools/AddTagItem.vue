@@ -7,17 +7,17 @@ export interface Tag extends ApiTag, FormatTag {}
 const props = defineProps<{
   tag: ApiTag;
 }>();
-const emit = defineEmits({
-  select: (tag: Tag) => tag || false,
-});
+const emit = defineEmits<{
+  (event: "submit", tag: Tag): void;
+}>();
 function clickIs() {
-  emit("select", { ...props.tag, mode: TagMode.is });
+  emit("submit", { ...props.tag, mode: TagMode.is });
 }
 function clickOr() {
-  emit("select", { ...props.tag, mode: TagMode.or });
+  emit("submit", { ...props.tag, mode: TagMode.or });
 }
 function clickNot() {
-  emit("select", { ...props.tag, mode: TagMode.not });
+  emit("submit", { ...props.tag, mode: TagMode.not });
 }
 </script>
 

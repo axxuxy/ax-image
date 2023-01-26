@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import App from "@/DebugApp.vue";
 import "@/assets/main.scss";
 import ElementPlus from "element-plus";
-import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
 const route = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,9 +23,5 @@ const route = createRouter({
 const app = createApp(App);
 app.use(route);
 app.use(ElementPlus);
-
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component);
-}
 
 app.mount("#app");

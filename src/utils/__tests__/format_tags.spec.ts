@@ -8,9 +8,7 @@ import {
 } from "@/utils/format_tags";
 import { toYMD } from "@/utils/date";
 
-const tagModes = (Object.keys(TagMode) as Array<keyof typeof TagMode>).map(
-  (key) => TagMode[key]
-);
+const tagModes = Object.values(TagMode);
 
 function randomChart() {
   const charts = "abcdefghijklmnopqustuvwxyz0123456789";
@@ -112,12 +110,8 @@ describe.concurrent("Test format tag module.", async () => {
   });
 
   it.concurrent("Test rating argument of format tags.", async () => {
-    const ratingModes = (
-      Object.keys(RatingMode) as Array<keyof typeof RatingMode>
-    ).map((key) => RatingMode[key]);
-    const ratingValues = (
-      Object.keys(RatingValue) as Array<keyof typeof RatingValue>
-    ).map((key) => RatingValue[key]);
+    const ratingModes = Object.values(RatingMode);
+    const ratingValues = Object.values(RatingValue);
     const ratings = ratingModes
       .map((mode) =>
         ratingValues.map((value) => ({
@@ -324,9 +318,7 @@ describe.concurrent("Test format tag module.", async () => {
   });
 
   it.concurrent("Test order argument of format tags", async () => {
-    const orders = (Object.keys(Order) as Array<keyof typeof Order>).map(
-      (key) => Order[key]
-    );
+    const orders = Object.values(Order);
 
     orders.forEach((order) => {
       expect(

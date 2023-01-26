@@ -3,9 +3,7 @@ import { ref } from "vue";
 import request, { ProxyType } from "@/utils/request";
 import { ipcRenderer } from "electron";
 
-const proxyTypes = (
-  Object.keys(ProxyType) as Array<keyof typeof ProxyType>
-).map((key) => ProxyType[key]);
+const proxyTypes = Object.values(ProxyType);
 const proxyType = ref(ProxyType.http);
 const proxyHost = ref("127.0.0.1");
 const proxyPort = ref(10809);

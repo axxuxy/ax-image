@@ -29,6 +29,7 @@ export const useConfig = defineStore("config", () => {
 
   const downloadMaxCount = ref(
     (() => {
+      // return 0;
       const _ = localStorage.getItem("download-max-count");
       if (!_) return 5;
       try {
@@ -41,13 +42,9 @@ export const useConfig = defineStore("config", () => {
   );
   watch(
     downloadMaxCount,
-    (value, old) => {
-      if (old && (typeof value !== "number" || value < 1)) {
-        downloadMaxCount.value = old;
-        return;
-      }
-      localStorage.setItem("download-max-count", value.toString());
+    (value) => {
       setMaxDownloadCount(value);
+      localStorage.setItem("download-max-count", value.toString());
     },
     {
       immediate: true,

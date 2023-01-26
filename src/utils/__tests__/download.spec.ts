@@ -5,7 +5,7 @@ import {
   download,
   DownloadEvent,
   DownloadType,
-  getDownalods,
+  getDownloads,
   getMaxDownloadCount,
   removeDwonloadListen,
   setMaxDownloadCount,
@@ -52,7 +52,7 @@ describe("Test download module.", () => {
   it("Test download module download, download setting, download stop function.", async () => {
     /// Start check has download item.
     expect(
-      getDownalods().length,
+      getDownloads().length,
       "Not add download item has downloads item."
     ).toBe(0);
 
@@ -68,7 +68,7 @@ describe("Test download module.", () => {
       post,
       savePath,
     });
-    const downloads = getDownalods();
+    const downloads = getDownloads();
     expect(
       downloads.length,
       "Only add one item of download,but get more item of download."
@@ -105,35 +105,35 @@ describe("Test download module.", () => {
       savePath: resolve(__dirname, "__temp__", "save2_path"),
     });
     expect(
-      getDownalods(),
+      getDownloads(),
       "Not abnormal work, add the second download item."
     ).toHaveLength(2);
     await sleep(100);
     expect(
-      getDownalods().filter((download) => download.isDownloading),
+      getDownloads().filter((download) => download.isDownloading),
       "In downloading item count abnormal."
     ).toHaveLength(1);
     setMaxDownloadCount(2);
     await sleep(100);
     expect(
-      getDownalods().filter((download) => download.isDownloading),
+      getDownloads().filter((download) => download.isDownloading),
       "Increase max download count after in downloading item not run auto add."
     ).toHaveLength(2);
 
     /// Check stop download.
-    getDownalods().forEach((download) => download.stop());
+    getDownloads().forEach((download) => download.stop());
     await sleep(100);
 
     expect(
-      getDownalods().filter(
+      getDownloads().filter(
         (download) =>
           download.isStop && !download.isDownloading && !download.downloadError
       ),
       "Stop downlad not abnormal work."
     ).toHaveLength(2);
 
-    getDownalods().forEach(cancelDownload);
-    expect(getDownalods(), "Cancel download function abnormal work.").toEqual(
+    getDownloads().forEach(cancelDownload);
+    expect(getDownloads(), "Cancel download function abnormal work.").toEqual(
       []
     );
   });
@@ -153,7 +153,7 @@ describe("Test download module.", () => {
       downloadType: DownloadType.file,
       savePath: awaitSavePath,
     });
-    const awaitDownloads = getDownalods();
+    const awaitDownloads = getDownloads();
     expect(
       awaitDownloads.length,
       "Add one await download item, download count not is one."
@@ -179,7 +179,7 @@ describe("Test download module.", () => {
       "Cancel event download item isn't canneled download item."
     ).toBe(awaitDownload);
     expect(
-      getDownalods(),
+      getDownloads(),
       "Cencal download work abnormal, in await download item."
     ).toEqual([]);
 
@@ -191,7 +191,7 @@ describe("Test download module.", () => {
       downloadType: DownloadType.file,
       savePath: failedSavePath,
     });
-    const failedDownloads = getDownalods();
+    const failedDownloads = getDownloads();
     expect(
       failedDownloads.length,
       "Add one failed download item, download count not is one."
@@ -208,7 +208,7 @@ describe("Test download module.", () => {
     ).toBe(failedDownload);
     cancelDownload(failedDownload);
     expect(
-      getDownalods(),
+      getDownloads(),
       "Cencal download work abnormal, in failed download item."
     ).toEqual([]);
 
@@ -224,7 +224,7 @@ describe("Test download module.", () => {
       downloadType: DownloadType.file,
       savePath: succeedSavePath,
     });
-    const succeedDownloads = getDownalods();
+    const succeedDownloads = getDownloads();
     expect(
       succeedDownloads.length,
       "Add one error download item, download count not is one."
@@ -240,7 +240,7 @@ describe("Test download module.", () => {
       "Succeed event download item not is add download item."
     ).toBe(succeedDownload);
     expect(
-      getDownalods(),
+      getDownloads(),
       "Downloaded download item not reomive in downloads."
     ).toEqual([]);
     expect(

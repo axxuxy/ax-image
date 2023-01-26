@@ -22,10 +22,12 @@ class DownloadDexie extends Dexie {
     website,
     last,
     limit = 5,
+    first,
   }: {
     website?: Website;
     last?: Date;
     limit?: number;
+    first?: Date; /// TODO Test the argument.
   } = {}): Promise<DownloadedInfo[]> {
     let collection = this.downloaded.orderBy("downloaded_at").reverse();
 
@@ -33,7 +35,14 @@ class DownloadDexie extends Dexie {
       collection = collection.filter((item) => item.website === website);
 
     if (last)
-      collection.filter((item: DownloadedInfo) => item.downloaded_at < last);
+      collection = collection.filter(
+        (item: DownloadedInfo) => item.downloaded_at < last
+      );
+
+    if (first)
+      collection = collection.filter(
+        (item: DownloadedInfo) => item.download_at >= first
+      );
 
     return collection.limit(limit).toArray();
   }
@@ -54,6 +63,24 @@ class DownloadDexie extends Dexie {
         download_type: downloadType,
       })
       .first();
+  }
+
+  deleteDownloaded({
+    website,
+    downloadType,
+    id,
+  }: {
+    website: Website;
+    downloadType: DownloadType;
+    id: number;
+  }) {
+    return this.downloaded
+      .where({
+        website,
+        download_type: downloadType,
+        id,
+      })
+      .delete();
   }
 
   async clear(): Promise<void> {

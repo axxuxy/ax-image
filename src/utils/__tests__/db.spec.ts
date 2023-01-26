@@ -29,9 +29,7 @@ async function saveDwonloadeds(downloadeds: DownloadedInfoList) {
   for (const downloaded of downloadeds) await db.saveDownloadedInfo(downloaded);
 }
 
-const websites = (Object.keys(Website) as Array<keyof typeof Website>).map(
-  (key) => Website[key]
-);
+const websites = Object.values(Website);
 
 /**
  * Sort downloaded list by downloaded time, this is query order.
@@ -86,7 +84,7 @@ describe("Test db module.", async () => {
       db.queryDownloadedInfos({ limit: data.length * 15 }),
       "Query all data prior downloaded time less to that downloaded time."
     ).resolves.toSatisfy((data) =>
-      compareTimeLessPriorTime(data as DownloadedInfoList)
+      compareTimeLessPriorTime(<DownloadedInfoList>data)
     );
 
     const last =
@@ -95,7 +93,7 @@ describe("Test db module.", async () => {
       db.queryDownloadedInfos({ limit: data.length * 15, last }),
       "Set last argument query data prior downloaded time less to that downloaded time."
     ).resolves.toSatisfy((data) =>
-      compareTimeLessPriorTime(data as DownloadedInfoList)
+      compareTimeLessPriorTime(<DownloadedInfoList>data)
     );
 
     for (const website of data) {
@@ -106,7 +104,7 @@ describe("Test db module.", async () => {
         }),
         `Set website argument to ${website.website} after, in query data, prior downloaded time less to that downloaded time.`
       ).resolves.toSatisfy((data) =>
-        compareTimeLessPriorTime(data as DownloadedInfoList)
+        compareTimeLessPriorTime(<DownloadedInfoList>data)
       );
 
       const last = website.data[5].downloaded_at;
@@ -118,7 +116,7 @@ describe("Test db module.", async () => {
         }),
         `Set last argument and website argument to ${website.website} after, in query data, prior downloaded time less to that downloaded time.`
       ).resolves.toSatisfy((data) =>
-        compareTimeLessPriorTime(data as DownloadedInfoList)
+        compareTimeLessPriorTime(<DownloadedInfoList>data)
       );
     }
   });
@@ -187,7 +185,7 @@ describe("Test db module.", async () => {
       db.queryDownloadedInfos({ last }),
       "Query data have downloaded date of less to last."
     ).resolves.toSatisfy((data) =>
-      (data as DownloadedInfoList).every(
+      (<DownloadedInfoList>data).every(
         (data) => data.downloaded_at.getTime() < last.getTime()
       )
     );
@@ -220,7 +218,7 @@ describe("Test db module.", async () => {
         }),
         "Have to downloaded date less to last or website of query data unequal to query website in query data."
       ).resolves.toSatisfy((data) =>
-        (data as DownloadedInfoList).every(
+        (<DownloadedInfoList>data).every(
           (data) =>
             data.downloaded_at.getTime() < last.getTime() &&
             data.website === website.website

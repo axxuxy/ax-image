@@ -7,13 +7,18 @@ import {
   getPosts,
 } from "@/utils/api";
 import { getBaseURLBySite, type Website } from "@/utils/website";
-import { computed, ref } from "vue";
+import { computed, ref, toRaw } from "vue";
 import { useLanguage } from "@/stores/language";
 import { storeToRefs } from "pinia";
 import PictureLoadingFailed from "@/assets/picture-loading-failed.svg?component";
 import { toYMDHMS } from "@/utils/date";
 import { RatingMode, TagMode } from "@/utils/format_tags";
-import { DownloadType, checkIsDownload, download } from "@/utils/download";
+import {
+  DownloadOption,
+  DownloadType,
+  checkIsDownload,
+  download,
+} from "@/utils/download";
 import { exec } from "child_process";
 import { ElMessage } from "element-plus";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
@@ -112,82 +117,38 @@ function showChildren() {
   emit("openChildren", props.post.id);
 }
 
-const downloadItems = computed(
-  () =>
-    Object.values(DownloadType)
-      .map((type) => {
-        switch (type) {
-          case DownloadType.file:
-            return props.post.file_url &&
-              props.post.file_size &&
-              props.post.width &&
-              props.post.height
-              ? {
-                  type,
-                  name: language.value.postImageComponent.downloadType[type],
-                  url: props.post.file_url,
-                  size: props.post.file_size,
-                  sizeText: bitText(props.post.file_size),
-                  width: props.post.width,
-                  height: props.post.height,
-                }
-              : undefined;
-          case DownloadType.jpeg:
-            return props.post.jpeg_url &&
-              props.post.jpeg_file_size &&
-              props.post.jpeg_width &&
-              props.post.jpeg_height
-              ? {
-                  type,
-                  name: language.value.postImageComponent.downloadType[type],
-                  url: props.post.jpeg_url,
-                  size: props.post.jpeg_file_size,
-                  sizeText: bitText(props.post.jpeg_file_size),
-                  width: props.post.jpeg_width,
-                  height: props.post.jpeg_height,
-                }
-              : undefined;
-          case DownloadType.sample:
-            return {
-              type,
-              name: language.value.postImageComponent.downloadType[type],
-              url: props.post.sample_url,
-              size: props.post.sample_file_size,
-              sizeText: bitText(props.post.sample_file_size),
-              width: props.post.sample_width,
-              height: props.post.sample_height,
-            };
-          default:
-            throw new Error(
-              `Undefined the download type url, the download type is ${type}`
-            );
-        }
-      })
-      .filter((_) => _) as Array<{
-      type: DownloadType;
-      name: string;
-      url: string;
-      size: number;
-      sizeText: string;
-      width: number;
-      height: number;
-    }>
+interface DownloadItem extends DownloadOption {
+  downloadInfo: Exclude<DownloadOption["downloadInfo"], undefined>;
+}
+const downloadItems = computed(() =>
+  Object.values(DownloadType)
+    .map(
+      (type) =>
+        new DownloadOption({
+          post: toRaw(props.post),
+          downloadType: type,
+          website: props.website,
+        })
+    )
+    .filter((item) => item.downloadInfo)
+    .map((item) => ({
+      name: language.value.postImageComponent.downloadType[item.downloadType],
+      sizeText: bitText(item.downloadInfo!.size),
+      ...(item as DownloadItem),
+    }))
 );
 
-function downloadImage(_: typeof downloadItems.value[number]) {
-  const downloadInfo = {
-    website: props.website,
-    post: props.post,
-    downloadType: _.type,
-    savePath: resolve(
-      downloadSaveDir.value,
-      `${props.website}-${props.post.id}-${_.type}${extname(_.url)}`
-    ),
-  };
-  if (checkIsDownload(downloadInfo))
+function downloadImage(_: (typeof downloadItems.value)[number]) {
+  if (checkIsDownload(_))
     ElMessage.warning(language.value.postImageComponent.yetDownload);
   else {
-    download(downloadInfo);
+    const savePath = resolve(
+      downloadSaveDir.value,
+      `${props.website}-${props.post.id}-${_.downloadType}${extname(
+        _.downloadInfo.url
+      )}`
+    );
+    download(Object.assign({ savePath, ..._ }));
     ElMessage.success(language.value.postImageComponent.addDownload);
   }
 }
@@ -205,7 +166,11 @@ const allImage = [
 </script>
 
 <template>
-  <ElButton @click="emit('close')" icon="close" circle class="close" />
+  <ElButton @click="emit('close')" circle class="close">
+    <ElIcon>
+      <i-ep-close />
+    </ElIcon>
+  </ElButton>
   <ElContainer class="box" v-loading="isInGetParent">
     <ElAside>
       <ElScrollbar>
@@ -277,7 +242,7 @@ const allImage = [
                 <span>{{ language.postImageComponent.showChildren }}</span>
               </ElButton>
             </li>
-            <li v-for="download in downloadItems" :key="download.type">
+            <li v-for="download in downloadItems" :key="download.downloadType">
               <ElButton
                 class="download-button"
                 text
@@ -287,9 +252,9 @@ const allImage = [
               >
                 <span>{{ download.name }}</span>
                 <span> - </span>
-                <span>{{ download.width }}</span>
+                <span>{{ download.downloadInfo.width }}</span>
                 <span> * </span>
-                <span>{{ download.height }}</span>
+                <span>{{ download.downloadInfo.height }}</span>
                 <span> - </span>
                 <span>{{ download.sizeText }}</span>
               </ElButton>
@@ -368,97 +333,101 @@ const allImage = [
   width: 100%;
   height: 100%;
 
-  .aside {
-    padding: 12px;
+  .el-aside {
+    border-right: solid 1px var(--el-menu-border-color);
 
-    .post-info {
-      padding-bottom: 8px;
+    .aside {
+      padding: 12px;
 
-      :deep() {
-        table {
-          table-layout: fixed;
+      .post-info {
+        padding-bottom: 8px;
 
-          tbody {
-            tr {
-              td {
-                word-wrap: break-word;
+        :deep() {
+          table {
+            table-layout: fixed;
 
-                &:nth-child(1) {
-                  box-sizing: content-box;
-                  width: 4em;
+            tbody {
+              tr {
+                td {
+                  word-wrap: break-word;
+
+                  &:nth-child(1) {
+                    box-sizing: content-box;
+                    width: 4em;
+                  }
                 }
               }
             }
           }
         }
-      }
 
-      .author {
-        p {
-          margin: 0;
+        .author {
+          p {
+            margin: 0;
+          }
+        }
+
+        .source {
+          display: block;
+          max-width: 100%;
+          text-overflow: ellipsis;
+          overflow: hidden;
+
+          :deep(span) {
+            display: inline;
+          }
         }
       }
 
-      .source {
-        display: block;
-        max-width: 100%;
-        text-overflow: ellipsis;
-        overflow: hidden;
-
-        :deep(span) {
-          display: inline;
-        }
-      }
-    }
-
-    .downloads {
-      li {
-        padding-bottom: 8px;
-
-        &:last-child {
-          padding-bottom: 0;
-          vertical-align: baseline;
-        }
-
-        .download-button {
-          white-space: break-spaces;
-        }
-      }
-    }
-
-    .tag-types {
-      .tags {
+      .downloads {
         li {
-          white-space: nowrap;
+          padding-bottom: 8px;
 
           &:last-child {
             padding-bottom: 0;
             vertical-align: baseline;
           }
 
-          padding-bottom: 8px;
-
-          .--tag.el-button {
-            margin-left: 0;
-            margin-right: 8px;
+          .download-button {
+            white-space: break-spaces;
           }
+        }
+      }
 
-          .el-tag {
-            max-width: calc(100% - 88px);
-            cursor: pointer;
+      .tag-types {
+        .tags {
+          li {
+            white-space: nowrap;
 
-            :deep(.el-tag__content) {
-              display: flex;
-              width: 100%;
+            &:last-child {
+              padding-bottom: 0;
+              vertical-align: baseline;
+            }
 
-              .el-icon {
-                padding-right: 8px;
-              }
+            padding-bottom: 8px;
 
-              .tag-name {
-                flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
+            .--tag.el-button {
+              margin-left: 0;
+              margin-right: 8px;
+            }
+
+            .el-tag {
+              max-width: calc(100% - 88px);
+              cursor: pointer;
+
+              :deep(.el-tag__content) {
+                display: flex;
+                width: 100%;
+
+                .el-icon {
+                  padding-right: 8px;
+                }
+
+                .tag-name {
+                  flex: 1;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                }
               }
             }
           }

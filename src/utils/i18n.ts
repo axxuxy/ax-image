@@ -4,12 +4,12 @@ import { TagType } from "@/utils/api";
 import { Order, RatingMode, RatingValue, TagMode } from "@/utils/format_tags";
 import { DownloadType } from "@/utils/download";
 
-function addAllValues<T extends { [key: string]: string }>(
-  values: T & { all?: never },
-  all: string
-): { [key in keyof T | "all"]: string } {
-  return Object.assign({ all }, values);
-}
+// function addAllValues<T extends { [key: string]: string }>(
+//   values: T & { all?: never },
+//   all: string
+// ): { [key in keyof T | "all"]: string } {
+//   return Object.assign({ all }, values);
+// }
 
 const websites = (() => {
   const websites: { [key: string]: string } = {};
@@ -23,7 +23,7 @@ const websites = (() => {
         throw new Error(`Need add the website ${value} alias.`);
     }
   });
-  return websites as { [key in Website]: string };
+  return <{ [key in Website]: string }>websites;
 })();
 
 enum DownloadStates {
@@ -33,20 +33,22 @@ enum DownloadStates {
 
 const downloadPage = {
   title: "下载页面",
-  filter: {
-    search: "搜索",
-  },
-  downloadStates: {
-    title: "下载状态",
-    values: addAllValues<typeof DownloadStates>(DownloadStates, "全部状态"),
-  },
-  showWebsite: {
-    title: "显示站点",
-    values: addAllValues<typeof websites>(websites, "全部站点"),
-  },
-  lastDate: {
-    title: "下载时间",
-  },
+  // filter: {
+  //   search: "搜索",
+  // },
+  // downloadStates: {
+  //   title: "下载状态",
+  //   values: addAllValues<typeof DownloadStates>(DownloadStates, "全部状态"),
+  // },
+  downloadStates: DownloadStates,
+  // showWebsite: {
+  //   title: "显示站点",
+  //   // values: addAllValues<typeof websites>(websites, "全部站点"),
+  //   // values:websites,
+  // },
+  // lastDate: {
+  //   title: "下载时间",
+  // },
 };
 
 function settingItem<T extends { title: string }>(item: T): T {
@@ -76,7 +78,7 @@ const settingsPage = {
       title: "下载设置",
       downloadPath: "下载地址",
       changeDownload: "更改",
-      downloadMaxCount: "最大下载数量",
+      downloadConcurrentCount: "并行下载数",
     }),
     rating: settingItem({
       title: "安全模式",
@@ -129,7 +131,7 @@ const tagTypes = (() => {
         );
     }
   });
-  return tagTypes as { [key in TagType]: string };
+  return <{ [key in TagType]: string }>tagTypes;
 })();
 
 const tagModes = (() => {
@@ -149,7 +151,7 @@ const tagModes = (() => {
         throw new Error(`Undefinded the mode, the mode is ${mode}.`);
     }
   });
-  return modes as { [key in TagMode]: string };
+  return <{ [key in TagMode]: string }>modes;
 })();
 
 function ratingText(value: RatingValue, mode: RatingMode) {
@@ -199,9 +201,9 @@ const ratings = (() => {
   Object.values(RatingValue).forEach((value) => {
     const values: { [key: string]: string } = {};
     modes.forEach((mode) => (values[mode] = ratingText(value, mode)));
-    ratings[value] = values as RatingModeText;
+    ratings[value] = <RatingModeText>values;
   });
-  return ratings as { [key in RatingValue]: RatingModeText };
+  return <{ [key in RatingValue]: RatingModeText }>ratings;
 })();
 
 export interface RangeOrValueText {
@@ -300,7 +302,7 @@ const orders = (() => {
         throw new Error(`Undefined the order text, the order is ${order}.`);
     }
   });
-  return orders as { [key in Order]: string };
+  return <{ [key in Order]: string }>orders;
 })();
 
 const filterTagComponent = {
@@ -343,7 +345,7 @@ const downloadType = (() => {
         throw new Error(`Not have the download type, the type is ${_}.`);
     }
   });
-  return types as { [key in DownloadType]: string };
+  return <{ [key in DownloadType]: string }>types;
 })();
 
 const postImageComponent = {
@@ -361,6 +363,59 @@ const postImageComponent = {
   yetDownload: "已添加下载",
 };
 
+const downloadTypes = (() => {
+  const types: { [key: string]: string } = {};
+  Object.values(DownloadType).forEach((type) => {
+    switch (type) {
+      case DownloadType.sample:
+        types[type] = "样图";
+        return;
+      case DownloadType.jpeg:
+        types[type] = "jpeg";
+        return;
+      case DownloadType.file:
+        types[type] = "原图";
+        return;
+      default:
+        throw new Error(`Undefined the type name, the type is ${type}`);
+    }
+  });
+  return <{ [key in DownloadType]: string }>types;
+})();
+const downloadListComponent = {
+  downloadTypes,
+  deleteAlert: "确定要删除图片吗？",
+  deleteAlertTitle: "删除图片",
+  deleteAlertConfirm: "确定",
+  deletedMessage: "删除成功",
+  deletedDownloadedInofFailed: "删除下载信息失败",
+  deleteAlertCancel: "取消",
+  deleteCancelMessage: "已取消",
+  noDownloading: "这里空空如也...",
+};
+
+const downloadedComponent = {
+  website: {
+    title: "指定站点",
+    values: websites,
+  },
+  date: {
+    title: "下载日期",
+  },
+  none: "这里空空如也...",
+  noneOfUnder: "没有符合条件的帖子图片",
+  loading: "加载中...",
+};
+
+const downloadingComponent = {
+  website: {
+    title: "指定站点",
+    values: websites,
+  },
+  none: "这里空空如也...",
+  noneOfUnder: "没有符合条件的下载项",
+};
+
 const zhCn = {
   name: "中文",
   elementPlus: _zhCn,
@@ -370,6 +425,9 @@ const zhCn = {
   postListComponent,
   filterTagComponent,
   postImageComponent,
+  downloadListComponent,
+  downloadedComponent,
+  downloadingComponent,
 };
 
 export const i18n: {

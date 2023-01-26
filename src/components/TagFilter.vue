@@ -4,10 +4,11 @@ import {
   RatingMode,
   RatingValue,
   TagMode,
+  type Tag as FormatTag,
   type TagsOptions,
 } from "@/utils/format_tags";
 import type { Website } from "@/utils/website";
-import { computed, nextTick, ref } from "vue";
+import { computed, ref } from "vue";
 import AutocompleteInputTagVue from "@/components/tools/AddTag.vue";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
 import { storeToRefs } from "pinia";
@@ -17,41 +18,48 @@ import RangeOrValue, {
 } from "@/components/tools/RangeOrValue.vue";
 import Clear from "@/assets/clear.svg?component";
 
-export interface TagFilterOptions extends TagsOptions {
-  tags?: Array<Tag>;
-}
-
 const props = defineProps<{
-  modelValue?: TagFilterOptions;
+  modelValue?: TagsOptions;
   website: Website;
 }>();
 
 const emit = defineEmits({
-  search: (value: TagFilterOptions) => value && true,
+  search: (value: TagsOptions) => value && true,
   close: () => true,
 });
 
 const { language } = storeToRefs(useLanguage());
 
-const tags = ref<Array<Tag>>([]);
+const tags = ref<Array<FormatTag | Tag>>([]);
+const tagList = computed(() =>
+  tags.value.map((tag) => ({
+    tag,
+    class: "type" in tag ? ["--tag", `--tag-${tag.type}`] : undefined,
+  }))
+);
 
 /// Add tag and remove tag function.
-function selectTag(tag: Tag) {
+function addTag(tag: Tag | FormatTag) {
   const _ = tags.value.filter((_) => _.name !== tag.name);
   _.push({
     ...tag,
   });
   tags.value = _;
 }
-function removeTag(tag: Tag | { type: string }) {
+function removeTag(tag: FormatTag | { type: string }) {
   tags.value = tags.value.filter((_) => _ !== tag);
 }
 
 const modes = Object.values(TagMode);
 
-function changeTagMode({ tag, mode }: { tag: Tag; mode: TagMode }) {
-  tag.mode = mode;
-  nextTick();
+function changeTagMode({
+  tag,
+  mode,
+}: {
+  tag: (typeof tagList)["value"][number];
+  mode: TagMode;
+}) {
+  tag.tag.mode = mode;
 }
 
 const user = ref<string | undefined>();
@@ -70,7 +78,7 @@ const ratings = computed(() => {
     )
     .flatMap((ratings) => ratings);
 });
-const rating = ref<typeof ratings.value[number]>();
+const rating = ref<(typeof ratings.value)[number]>();
 const source = ref<string | undefined>();
 
 const id = ref<ModelValue<"number">>();
@@ -96,8 +104,13 @@ function reset() {
   setTags(props.modelValue ?? {});
 }
 
-function setTags(option: TagFilterOptions) {
-  tags.value = option.tags ?? [];
+function setTags(option: TagsOptions) {
+  tags.value =
+    option.tags?.map((tag) => {
+      const _ = sessionStorage.getItem(`${props.website}-tag-${tag.name}`);
+      if (!_) return tag;
+      return Object.assign(JSON.parse(_), tag);
+    }) ?? [];
   user.value = option.user;
   vote3.value = option["vote:3"];
   md5.value = option.md5;
@@ -121,7 +134,7 @@ function setTags(option: TagFilterOptions) {
 }
 
 function search() {
-  const data: TagFilterOptions = {};
+  const data: TagsOptions = {};
   if (tags.value.length) data.tags = tags.value;
   if (user.value) data.user = user.value;
   if (vote3.value) data["vote:3"] = vote3.value;
@@ -152,20 +165,21 @@ setTags(props.modelValue ?? {});
     size="large"
   >
     <ElSpace wrap class="tag-list">
+      <!-- <TagItem v-for="tag in tags" :key="tag.name" :tag="tag" @changeMode=""></TagItem> -->
       <ElTag
-        v-for="tag in tags"
-        :key="tag.id"
+        v-for="tag in tagList"
+        :key="tag.tag.name"
         closable
-        @close="removeTag(tag)"
+        @close="removeTag(tag.tag)"
         disable-transitions
-        :class="['--tag', `--tag-${tag.type}`]"
-        :title="language.filterTagComponent.tagTypes[tag.type]"
+        :class="tag.class"
         size="large"
       >
+        <!-- :title="language.filterTagComponent.tagTypes[tag.type]"  -->
         <ElDropdown trigger="click" @command="changeTagMode" class="--tag-mode">
-          <ElIcon v-if="tag.mode === TagMode.is">+</ElIcon>
-          <ElIcon v-else-if="tag.mode === TagMode.not">-</ElIcon>
-          <ElIcon v-else-if="tag.mode === TagMode.or">~</ElIcon>
+          <ElIcon v-if="tag.tag.mode === TagMode.is">+</ElIcon>
+          <ElIcon v-else-if="tag.tag.mode === TagMode.not">-</ElIcon>
+          <ElIcon v-else-if="tag.tag.mode === TagMode.or">~</ElIcon>
           <template #dropdown>
             <ElDropdownMenu>
               <ElDropdownItem
@@ -183,13 +197,16 @@ setTags(props.modelValue ?? {});
             </ElDropdownMenu>
           </template>
         </ElDropdown>
-        <span>{{ tag.name }}</span>
-        <span> - </span>
-        <span>{{ tag.count }}</span>
+        <span>{{ tag.tag.name }}</span>
+        <!-- <template v-if="tag.count">
+          <span> - </span>
+          <span>{{ tag.count }}</span>
+        </template> -->
       </ElTag>
       <AutocompleteInputTagVue
         :website="props.website"
-        @select="selectTag"
+        @submit="addTag"
+        key="auto-input-tag"
       ></AutocompleteInputTagVue>
     </ElSpace>
     <ElRow :gutter="12" class="filter-tags">
@@ -329,14 +346,26 @@ setTags(props.modelValue ?? {});
       </ElCol>
     </ElRow>
     <ElSpace style="justify-content: end">
-      <ElButton circle @click="reset" icon="refresh"></ElButton>
-      <ElButton circle @click="clear">
+      <ElButton circle @click="reset">
         <ElIcon>
-          <Clear style="width: 1em; height: 1em; color: var(--color)" />
+          <i-ep-refresh />
         </ElIcon>
       </ElButton>
-      <ElButton circle @click="search" icon="search"></ElButton>
-      <ElButton circle @click="emit('close')" icon="close"> </ElButton>
+      <ElButton circle @click="clear">
+        <ElIcon>
+          <Clear />
+        </ElIcon>
+      </ElButton>
+      <ElButton circle @click="search">
+        <ElIcon>
+          <i-ep-search />
+        </ElIcon>
+      </ElButton>
+      <ElButton circle @click="emit('close')">
+        <ElIcon>
+          <i-ep-close />
+        </ElIcon>
+      </ElButton>
     </ElSpace>
   </ElSpace>
 </template>
@@ -349,6 +378,7 @@ setTags(props.modelValue ?? {});
   .--tag-mode {
     margin-left: -4px;
     margin-right: 4px;
+    color: var(--el-tag-text-color);
   }
 
   .filter-tags {
