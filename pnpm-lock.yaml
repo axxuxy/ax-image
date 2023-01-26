@@ -30,6 +30,7 @@ specifiers:
   socks-proxy-agent: ^7.0.0
   typescript: ~4.7.4
   unplugin-auto-import: ^0.11.5
+  unplugin-element-plus: ^0.4.1
   unplugin-icons: ^0.15.1
   unplugin-vue-components: ^0.22.12
   vite: ^3.2.5
@@ -75,6 +76,7 @@ devDependencies:
   prettier: registry.npmmirror.com/prettier/2.8.3
   typescript: registry.npmmirror.com/typescript/4.7.4
   unplugin-auto-import: registry.npmmirror.com/unplugin-auto-import/0.11.5
+  unplugin-element-plus: registry.npmmirror.com/unplugin-element-plus/0.4.1_vite@3.2.5
   unplugin-icons: registry.npmmirror.com/unplugin-icons/0.15.1
   unplugin-vue-components: registry.npmmirror.com/unplugin-vue-components/0.22.12_vue@3.2.45
   vite: registry.npmmirror.com/vite/3.2.5_iwdbj4p7tcybw7crwxzyorlhpu
@@ -861,6 +863,16 @@ packages:
       rollup: registry.npmmirror.com/rollup/3.10.1
       tslib: registry.npmmirror.com/tslib/2.4.1
       typescript: registry.npmmirror.com/typescript/4.7.4
+    dev: true
+
+  registry.npmmirror.com/@rollup/pluginutils/4.2.1:
+    resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@rollup/pluginutils/-/pluginutils-4.2.1.tgz}
+    name: '@rollup/pluginutils'
+    version: 4.2.1
+    engines: {node: '>= 8.0.0'}
+    dependencies:
+      estree-walker: registry.npmmirror.com/estree-walker/2.0.2
+      picomatch: registry.npmmirror.com/picomatch/2.3.1
     dev: true
 
   registry.npmmirror.com/@rollup/pluginutils/5.0.2:
@@ -2943,6 +2955,12 @@ packages:
       typed-array-length: registry.npmmirror.com/typed-array-length/1.0.4
       unbox-primitive: registry.npmmirror.com/unbox-primitive/1.0.2
       which-typed-array: registry.npmmirror.com/which-typed-array/1.1.9
+    dev: true
+
+  registry.npmmirror.com/es-module-lexer/0.10.5:
+    resolution: {integrity: sha512-+7IwY/kiGAacQfY+YBhKMvEmyAJnw5grTUgjG85Pe7vcUI/6b7pZjZG8nQ7+48YhzEAEqrEgD2dCz/JIK+AYvw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/es-module-lexer/-/es-module-lexer-0.10.5.tgz}
+    name: es-module-lexer
+    version: 0.10.5
     dev: true
 
   registry.npmmirror.com/es-set-tostringtag/2.0.1:
@@ -6637,6 +6655,24 @@ packages:
       - rollup
     dev: true
 
+  registry.npmmirror.com/unplugin-element-plus/0.4.1_vite@3.2.5:
+    resolution: {integrity: sha512-x8L35sppkbtnAf+aSPXNsLPjCUrM0mWKgujqMIgrHiDQaGbpMlNnbN2kjP5CMclykNOw8fUCreEhtxPyzg8tmw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/unplugin-element-plus/-/unplugin-element-plus-0.4.1.tgz}
+    id: registry.npmmirror.com/unplugin-element-plus/0.4.1
+    name: unplugin-element-plus
+    version: 0.4.1
+    engines: {node: '>=14.19.0'}
+    dependencies:
+      '@rollup/pluginutils': registry.npmmirror.com/@rollup/pluginutils/4.2.1
+      es-module-lexer: registry.npmmirror.com/es-module-lexer/0.10.5
+      magic-string: registry.npmmirror.com/magic-string/0.26.7
+      unplugin: registry.npmmirror.com/unplugin/0.7.2_vite@3.2.5
+    transitivePeerDependencies:
+      - esbuild
+      - rollup
+      - vite
+      - webpack
+    dev: true
+
   registry.npmmirror.com/unplugin-icons/0.15.1:
     resolution: {integrity: sha512-d4Gc8A4qIJYIXKueltTwoHfR3Cxsdfnmz8lSN5dsITEyai5tdb0uWpbQkn3j9HUlLDSB1ybdQIf5CItxJT3UDw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/unplugin-icons/-/unplugin-icons-0.15.1.tgz}
     name: unplugin-icons
@@ -6694,6 +6730,33 @@ packages:
     transitivePeerDependencies:
       - rollup
       - supports-color
+    dev: true
+
+  registry.npmmirror.com/unplugin/0.7.2_vite@3.2.5:
+    resolution: {integrity: sha512-m7thX4jP8l5sETpLdUASoDOGOcHaOVtgNyrYlToyQUvILUtEzEnngRBrHnAX3IKqooJVmXpoa/CwQ/QqzvGaHQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/unplugin/-/unplugin-0.7.2.tgz}
+    id: registry.npmmirror.com/unplugin/0.7.2
+    name: unplugin
+    version: 0.7.2
+    peerDependencies:
+      esbuild: '>=0.13'
+      rollup: ^2.50.0
+      vite: ^2.3.0 || ^3.0.0-0
+      webpack: 4 || 5
+    peerDependenciesMeta:
+      esbuild:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+    dependencies:
+      acorn: registry.npmmirror.com/acorn/8.8.2
+      chokidar: registry.npmmirror.com/chokidar/3.5.3
+      vite: registry.npmmirror.com/vite/3.2.5_iwdbj4p7tcybw7crwxzyorlhpu
+      webpack-sources: registry.npmmirror.com/webpack-sources/3.2.3
+      webpack-virtual-modules: registry.npmmirror.com/webpack-virtual-modules/0.4.6
     dev: true
 
   registry.npmmirror.com/unplugin/1.0.1:
@@ -7042,6 +7105,12 @@ packages:
     name: webpack-sources
     version: 3.2.3
     engines: {node: '>=10.13.0'}
+    dev: true
+
+  registry.npmmirror.com/webpack-virtual-modules/0.4.6:
+    resolution: {integrity: sha512-5tyDlKLqPfMqjT3Q9TAqf2YqjwmnUleZwzJi1A5qXnlBCdj2AtOJ6wAWdglTIDOPgOiOrXeBeFcsQ8+aGQ6QbA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/webpack-virtual-modules/-/webpack-virtual-modules-0.4.6.tgz}
+    name: webpack-virtual-modules
+    version: 0.4.6
     dev: true
 
   registry.npmmirror.com/webpack-virtual-modules/0.5.0:

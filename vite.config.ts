@@ -15,6 +15,7 @@ import { main } from "./package.json";
 import svgLoader from "vite-svg-loader";
 import Icons from "unplugin-icons/vite";
 import IconsResolver from "unplugin-icons/resolver";
+import ElementPlus from "unplugin-element-plus/vite";
 
 declare global {
   namespace NodeJS {
@@ -58,6 +59,7 @@ export default defineConfig(({ mode }) => {
     });
 
   plugins.push(
+    ElementPlus(),
     AutoImport({
       imports: ["vue"],
       resolvers: [
