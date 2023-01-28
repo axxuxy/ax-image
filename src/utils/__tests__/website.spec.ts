@@ -8,9 +8,7 @@ import {
 
 describe.concurrent("Test website module.", () => {
   it.concurrent("Test website all in configs.", () => {
-    const websites = (Object.keys(Website) as Array<keyof typeof Website>).map(
-      (key) => Website[key]
-    );
+    const websites = Object.values(Website);
 
     const configMap: Map<Website, Config> = new Map();
     configs.forEach((config) => configMap.set(config.website, config));

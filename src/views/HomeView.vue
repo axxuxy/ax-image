@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { configs as _configs, type Config } from "@/utils/website";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { useLanguage } from "@/stores/language";
 import { storeToRefs } from "pinia";
-import TagFilter, { type TagFilterOptions } from "@/components/TagFilter.vue";
+import TagFilter from "@/components/TagFilter.vue";
 import PostList from "@/components/PostList.vue";
-import { formatTags } from "@/utils/format_tags";
+import { formatTags, restoreTags, type TagsOptions } from "@/utils/format_tags";
 import type { Tag } from "@/components/tools/AddTagItem.vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import {
+  addDwonloadListen,
+  getDownloads,
+  removeDwonloadListen,
+} from "@/utils/download";
+import { useConfig } from "@/stores/config";
 
 const { language } = storeToRefs(useLanguage());
 const configs = computed(() =>
@@ -34,13 +40,11 @@ function websiteCommand(_: Config & { name: string }) {
 
 const showFilter = ref(false);
 
-const tagOptions = ref<TagFilterOptions>({});
+const tagOptions = ref<TagsOptions>({});
 
+const tags = computed(() => formatTags(tagOptions.value)?.split(" ")?.sort());
 const postsKey = computed(() =>
-  [
-    config.value.website,
-    ...(formatTags(tagOptions.value)?.split(" ")?.sort() ?? []),
-  ].join(" ")
+  [config.value.website, ...(tags.value ?? [])].join(" ")
 );
 const posts = ref<typeof PostList | null>(null);
 const update = ref(false);
@@ -49,7 +53,7 @@ watch(update, async (value) => {
   update.value = false;
 });
 
-function search(_: TagFilterOptions) {
+function search(_: TagsOptions) {
   showFilter.value = false;
   tagOptions.value = _;
 }
@@ -62,6 +66,56 @@ function openTag(tag: Tag) {
 }
 
 const router = useRouter();
+
+const downloadCount = ref(0);
+function updateDownloadingCount() {
+  downloadCount.value = getDownloads().filter(
+    (download) => !download.isStop
+  ).length;
+}
+addDwonloadListen(updateDownloadingCount);
+onUnmounted(() => removeDwonloadListen(updateDownloadingCount));
+updateDownloadingCount();
+
+function removeTag(tag: string) {
+  tagOptions.value = restoreTags(
+    tags.value!.filter((_) => _ !== tag).join(" ")
+  );
+}
+
+const route = useRoute();
+watch([config, tags], () => {
+  router.push({
+    name: "home",
+    query: {
+      tags: tags.value?.join(" "),
+      website: config.value.website,
+    },
+  });
+});
+watch(
+  route,
+  (value) => {
+    if (value.name === "home" && value.query.tags !== tags.value) {
+      const _ = configs.value.find(
+        (config) => config.website === value.query.website
+      );
+      if (_) config.value = _;
+      // const tags = value.query.tags as string;
+      // tagOptions.value = restoreTags(tags);
+    }
+  },
+  {
+    immediate: true,
+  }
+);
+
+const { rating } = storeToRefs(useConfig());
+watch(rating, () => {
+  nextTick(() => {
+    posts.value?.update();
+  });
+});
 </script>
 
 <template>
@@ -89,6 +143,19 @@ const router = useRouter();
           </RouterLink>
         </template>
         <template #extra>
+          <div class="tags-box" v-if="tags">
+            <ElScrollbar>
+              <div class="tags">
+                <ElTag
+                  v-for="tag in tags"
+                  :key="tag"
+                  closable
+                  @close="removeTag(tag)"
+                  >{{ tag }}</ElTag
+                >
+              </div>
+            </ElScrollbar>
+          </div>
           <ElDropdown split-button @command="websiteCommand">
             <span>{{ config.name }}</span>
             <template #dropdown>
@@ -102,25 +169,27 @@ const router = useRouter();
               </ElDropdownMenu>
             </template>
           </ElDropdown>
-          <ElButton icon="search" @click="showFilter = true" circle></ElButton>
-          <ElButton
-            icon="refresh-left"
-            @click="update = true"
-            :disabled="update"
-            circle
-          ></ElButton>
-          <ElButton
-            @click="router.push('/download')"
-            icon="download"
-            circle
-            link
-          ></ElButton>
-          <ElButton
-            @click="router.push('/setting')"
-            icon="setting"
-            circle
-            link
-          ></ElButton>
+          <ElButton @click="showFilter = true" circle>
+            <ElIcon>
+              <i-ep-search />
+            </ElIcon>
+          </ElButton>
+          <ElButton @click="update = true" :disabled="update" circle>
+            <ElIcon>
+              <i-ep-refresh-left />
+            </ElIcon>
+          </ElButton>
+
+          <ElBadge :value="downloadCount" :hidden="!downloadCount">
+            <ElButton @click="router.push('/download')" circle link>
+              <ElIcon>
+                <i-ep-download />
+              </ElIcon>
+            </ElButton>
+          </ElBadge>
+          <ElButton @click="router.push('/setting')" circle link>
+            <i-ep-setting />
+          </ElButton>
         </template>
       </ElPageHeader>
     </ElHeader>
@@ -145,17 +214,28 @@ const router = useRouter();
   header {
     position: sticky;
     top: 0;
-    display: flex;
+    // display: flex;
     min-height: 60px;
-    align-items: center;
+    // align-items: center;
     border-bottom: 1px solid var(--el-border-color);
     background-color: #fff;
     z-index: 10;
 
     .el-page-header {
+      // display: flex;
+      // align-items: center;
       width: 100%;
+      // min-height: 100%;
+      height: 100%;
 
       :deep(.el-page-header__header) {
+        // min-height: 100%;
+        height: 100%;
+
+        .el-page-header__left {
+          flex-shrink: 0;
+        }
+
         .el-page-header__icon {
           display: none;
         }
@@ -165,13 +245,41 @@ const router = useRouter();
         }
 
         .el-page-header__extra {
+          height: 100%;
+          flex: 1;
+          flex-shrink: 1;
+          display: flex;
+          justify-content: end;
+          align-items: center;
+          overflow: hidden;
+          // white-space: nowrap;
+
           & > div,
           & > button {
             margin-left: 12px;
+            flex-shrink: 0;
           }
 
-          & > *:nth-child(1) {
-            margin-left: 0;
+          // &>*:nth-child(1) {
+          //   margin-left: 0;
+          // }
+
+          .tags-box {
+            // display: inline-block;
+            overflow: auto;
+            flex: 1;
+            display: flex;
+            justify-content: end;
+            overflow: hidden;
+
+            .tags {
+              display: flex;
+              grid-gap: 12px;
+              padding: 8px 0;
+              // justify-content: end;
+              // overflow: hidden;
+              // flex: 1;
+            }
           }
         }
       }

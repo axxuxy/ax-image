@@ -1,10 +1,12 @@
-import { DownloadType, type DownloadedInfo } from "@/utils/download";
+import {
+  DownloadOption,
+  DownloadType,
+  type DownloadedInfo,
+} from "@/utils/download";
 import type { Website } from "@/utils/website";
 import { getPost } from "@/utils/__tools__/posts";
 
-const downloadTypes = (
-  Object.keys(DownloadType) as Array<keyof typeof DownloadType>
-).map((key) => DownloadType[key]);
+const downloadTypes = Object.values(DownloadType);
 
 export function getDownloaded(website?: Website): DownloadedInfo {
   const post = getPost(website);
@@ -26,5 +28,11 @@ export function getDownloaded(website?: Website): DownloadedInfo {
     download_type,
     save_path,
     ...post,
+    size:
+      new DownloadOption({
+        post,
+        downloadType: download_type,
+        website: post.website,
+      }).downloadInfo?.size ?? 0,
   };
 }

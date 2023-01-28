@@ -35,9 +35,7 @@ async function clearData() {
 const laseDate = ref("");
 
 const website = ref<Website | undefined>();
-const websites = (Object.keys(Website) as Array<keyof typeof Website>).map(
-  (key) => Website[key]
-);
+const websites = Object.values(Website);
 
 const limit = ref(5);
 
@@ -94,7 +92,7 @@ function disabledDate(date: Date) {
       <ElButton @click="loadData">loadData</ElButton>
       <ElButton @click="update">
         <ElIcon>
-          <Refresh />
+          <i-ep-refresh />
         </ElIcon>
       </ElButton>
     </div>

@@ -117,6 +117,7 @@ function openTag(tag: Tag) {
   <ElScrollbar height="100%" :id="scrollbarId" class="posts-box">
     <ul
       class="posts"
+      :class="{ empty: !posts.length }"
       v-infinite-scroll="getPosts"
       :infinite-scroll-disabled="loading || noMore"
     >
@@ -131,7 +132,7 @@ function openTag(tag: Tag) {
     <ElAlert v-if="loading" class="loading" center :closable="false">
       <span>{{ language.postListComponent.loading }}</span>
       <ElIcon class="is-loading">
-        <Loading />
+        <i-ep-loading />
       </ElIcon>
     </ElAlert>
     <ElAlert v-else-if="getFailed" type="error" center :closable="false">
@@ -139,11 +140,14 @@ function openTag(tag: Tag) {
         <span>{{ language.postListComponent.loadingFailed }}</span>
         <ElButton
           @click="failedGetPosts"
-          icon="refresh"
           color="var(--el-color-error)"
           text
           plain
-        />
+        >
+          <ElIcon>
+            <i-ep-refresh />
+          </ElIcon>
+        </ElButton>
       </ElSpace>
     </ElAlert>
     <ElAlert v-else-if="noMore" center type="info" :closable="false">
@@ -152,7 +156,11 @@ function openTag(tag: Tag) {
           ? language.postListComponent.noMore
           : language.postListComponent.none
       }}</span>
-      <ElButton @click="update" icon="refresh" text plain />
+      <ElButton @click="update" text plain>
+        <ElIcon>
+          <i-ep-refresh />
+        </ElIcon>
+      </ElButton>
     </ElAlert>
   </ElScrollbar>
   <ElBacktop :target="backTopTarget" />
@@ -168,7 +176,7 @@ function openTag(tag: Tag) {
   grid-gap: 8px;
   grid-template-columns: repeat(auto-fill, 158px);
   justify-content: center;
-  padding-top: 8px;
+  padding: 8px 0;
 
   .post-item {
     padding: 8px 4px;
@@ -191,10 +199,15 @@ function openTag(tag: Tag) {
       }
     }
   }
+
+  &.empty {
+    padding-bottom: 0;
+  }
 }
 
 .el-alert {
   height: 53px;
+  margin-bottom: 8px;
 
   .el-space {
     :deep() {

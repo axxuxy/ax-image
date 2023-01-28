@@ -12,9 +12,21 @@ import {
   addErrorEventListener,
 } from "@/utils/capture_error";
 
-import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import { ipcRenderer } from "electron";
 import { useConfig } from "@/stores/config";
+
+import {
+  DownloadEvent,
+  DownloadOption,
+  DownloadType,
+  addDwonloadListen,
+  download,
+  getDownloads,
+} from "@/utils/download";
+import type { Post } from "@/utils/api";
+import type { Website } from "@/utils/website";
+import { db } from "@/utils/db";
+/// FIXME In open tags filter, more ... delay time.
 
 addErrorEventListener((errorInfo) => {
   console.error(errorInfo);
@@ -25,10 +37,6 @@ const app = createApp(App);
 app.use(ElementPlus);
 app.use(vueCaptureErrorPlugin);
 
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component);
-}
-
 app.use(createPinia());
 app.use(router);
 
@@ -37,7 +45,7 @@ if (proxy)
   useConfig()
     .setProxy(JSON.parse(proxy))
     .catch((error) =>
-      window.dispatchEvent(new ErrorEvent("Error", error as Error))
+      window.dispatchEvent(new ErrorEvent("Error", <Error>error))
     )
     .finally(() => app.mount("#app"));
 else app.mount("#app");
@@ -45,4 +53,46 @@ else app.mount("#app");
 window.addEventListener("keydown", (event) => {
   if (event.shiftKey && event.ctrlKey && event.key === "I")
     ipcRenderer.send("devtool");
+});
+
+window.addEventListener("unload", () => {
+  localStorage.setItem(
+    "downloading-list",
+    JSON.stringify(
+      getDownloads().map((_) => ({
+        post: _.post,
+        website: _.website,
+        downloadType: _.downloadType,
+        savePath: _.savePath,
+      }))
+    )
+  );
+});
+((downloadingListText: string | null) => {
+  localStorage.removeItem("downloading-list");
+  if (downloadingListText)
+    (<
+      Array<{
+        post: Post;
+        downloadType: DownloadType;
+        website: Website;
+        savePath: string;
+      }>
+    >JSON.parse(downloadingListText)).forEach((_) => {
+      download(
+        Object.assign(
+          { savePath: _.savePath },
+          <
+            DownloadOption & {
+              downloadInfo: Exclude<DownloadOption["downloadInfo"], undefined>;
+            }
+          >new DownloadOption(_)
+        )
+      );
+    });
+})(localStorage.getItem("downloading-list"));
+
+addDwonloadListen((download, event) => {
+  if (event === DownloadEvent.succeed)
+    db.saveDownloadedInfo(download.getDownloadedInfo());
 });

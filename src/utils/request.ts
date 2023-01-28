@@ -116,9 +116,9 @@ export default class {
           }
           if (onprogress) {
             let size = 0;
-            response.on("data", (butter: Buffer) => {
-              onprogress((size += butter.length));
-            });
+            response.on("data", (buffer: Buffer) =>
+              onprogress((size += buffer.length))
+            );
           }
 
           const dir = dirname(save);

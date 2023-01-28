@@ -35,9 +35,7 @@ if (mock) {
   });
 }
 
-const websites = (Object.keys(Website) as Array<keyof typeof Website>).map(
-  (key) => Website[key]
-);
+const websites = Object.values(Website);
 
 function checkPost(post: Post): boolean {
   return (
@@ -241,11 +239,11 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           `Did not find a post with only one of the set tags, in website ${website}, tags is ${name} and ${name2}`
         ).resolves.toSatisfy((posts) => {
           return (
-            (posts as Array<Post>).some((post) => {
+            (<Array<Post>>posts).some((post) => {
               const tags = post.tags.split(" ");
               return tags.includes(name) && !tags.includes(name2);
             }) &&
-            (posts as Array<Post>).some((post) => {
+            (<Array<Post>>posts).some((post) => {
               const tags = post.tags.split(" ");
               return tags.includes(name2) && !tags.includes(name);
             })
@@ -264,7 +262,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           }),
           `Use \`*\` as wildcard not work well, in website ${website}.`
         ).resolves.toSatisfy((posts) =>
-          (posts as Array<Post>).every((post) => post.tags.includes("_"))
+          (<Array<Post>>posts).every((post) => post.tags.includes("_"))
         );
       }
     },
@@ -283,8 +281,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           `Get posts has post contain autnor is't ${author},in website ${website}.`
         ).resolves.toSatisfy(
           (posts) =>
-            (posts as Array<Post>).length > 0 &&
-            (posts as Array<Post>).every((post) => post.author === author)
+            (<Array<Post>>posts).length > 0 &&
+            (<Array<Post>>posts).every((post) => post.author === author)
         );
       }
     },
@@ -311,8 +309,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           `Get post md5 is not md5 argument, in website ${website}, md5 is ${md5}.`
         ).resolves.toSatisfy(
           (posts) =>
-            (posts as Array<Post>).length > 0 &&
-            (posts as Array<Post>).every((post) => post.md5 === md5)
+            (<Array<Post>>posts).length > 0 &&
+            (<Array<Post>>posts).every((post) => post.md5 === md5)
         );
       }
     },
@@ -324,12 +322,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
   it(
     "Test get posts by rating of tags argument.",
     async () => {
-      const ratingModes = (
-        Object.keys(RatingMode) as Array<keyof typeof RatingMode>
-      ).map((key) => RatingMode[key]);
-      const ratingValues = (
-        Object.keys(RatingValue) as Array<keyof typeof RatingValue>
-      ).map((key) => RatingValue[key]);
+      const ratingModes = Object.values(RatingMode);
+      const ratingValues = Object.values(RatingValue);
       for (const website of websites) {
         for (const mode of ratingModes) {
           for (const value of ratingValues) {
@@ -338,11 +332,11 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
             ).resolves.toSatisfy((posts) => {
               switch (mode) {
                 case RatingMode.is:
-                  return (posts as Array<Post>).every(
+                  return (<Array<Post>>posts).every(
                     (post) => post.rating === value
                   );
                 case RatingMode.not:
-                  return (posts as Array<Post>).every(
+                  return (<Array<Post>>posts).every(
                     (post) => post.rating !== value
                   );
                 default:
@@ -793,9 +787,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
   it(
     "Test get posts by order of tags argument.",
     async () => {
-      const orders = (Object.keys(Order) as Array<keyof typeof Order>)
-        .map((key) => Order[key])
-        .filter((order) => order !== Order.vote);
+      const orders = Object.values(Order).filter(
+        (order) => order !== Order.vote
+      );
       /// Order `Order.vote` not test, I don't know judge the order is it right.
 
       for (const website of websites) {
@@ -967,9 +961,9 @@ describe.skipIf(!mock)("Test get tag api.", async () => {
   it(
     "Test get tags by order argument.",
     async () => {
-      const tagOrders = (Object.keys(TagOrder) as Array<keyof typeof TagOrder>)
-        .map((key) => TagOrder[key])
-        .filter((order) => order !== TagOrder.date);
+      const tagOrders = Object.values(TagOrder).filter(
+        (order) => order !== TagOrder.date
+      );
 
       for (const website of websites) {
         for (const order of tagOrders) {

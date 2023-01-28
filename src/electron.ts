@@ -50,8 +50,18 @@ async function createWindow() {
     },
   });
 
+  protocol.registerFileProtocol("path", (req, res) => {
+    res(req.url.slice(7));
+  });
+
   if (process.env.DEV_URL) {
     win.maximize();
+    const vueDevtoolsPath = resolve(
+      app.getPath("home"),
+      "AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/6.5.0_0"
+    );
+    if (existsSync(vueDevtoolsPath))
+      win.webContents.session.loadExtension(vueDevtoolsPath);
     await win.loadURL(process.env.DEV_URL);
     win.webContents.openDevTools();
   } else {

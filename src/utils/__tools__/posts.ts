@@ -1,6 +1,6 @@
 import { Website } from "@/utils/website";
 import type { Post } from "@/utils/api";
-const konachanPosts = [
+const konachanPosts = <Array<Post>>[
   {
     id: 350038,
     tags: "2girls barefoot blue_eyes book breasts building cage city cleavage glasses hug long_hair original pink_hair purple_hair twintails yellow_eyes youxuemingdie",
@@ -884,8 +884,8 @@ const konachanPosts = [
     frames_string: "",
     frames: [],
   },
-] as Array<Post>;
-const yandePosts = [
+];
+const yandePosts = <Array<Post>>[
   {
     id: 1040310,
     tags: "elf pointy_ears sunako_(veera)",
@@ -2895,13 +2895,13 @@ const yandePosts = [
     last_noted_at: 0,
     last_commented_at: 0,
   },
-] as Array<Post>;
+];
 
 const websitePostsMap: Map<Website, Array<Post>> = new Map([
   [Website.konachan, konachanPosts],
   [Website.yande, yandePosts],
 ]);
-const websites = (Object.keys(Website) as Array<keyof typeof Website>).map(
+const websites = (<Array<keyof typeof Website>>Object.keys(Website)).map(
   (key) => Website[key]
 );
 

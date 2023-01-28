@@ -87,9 +87,9 @@ export const vueCaptureErrorPlugin: Plugin = {
       const errorInfo: VueErrorInfo = {
         date: new Date(),
         type: ErrorType.vue,
-        message: (err as Error).message,
-        stack: (err as Error).stack || (err as Error).toString(),
-        name: (err as Error).name,
+        message: (<Error>err).message,
+        stack: (<Error>err).stack || (<Error>err).toString(),
+        name: (<Error>err).name,
         routePath: vm?.$route?.fullPath,
         componentPath: components,
         data: vm?.$data,
@@ -135,7 +135,7 @@ window.addEventListener(
       };
       captureError(errorInfo);
     } else {
-      captureError({
+      captureError(<EventOtherErrorInfo>{
         date: new Date(),
         type: ErrorType.otherEvent,
         message: undefined,
@@ -143,7 +143,7 @@ window.addEventListener(
         name: "",
         eventName: event.constructor.name,
         eventTargetName: event.target?.constructor?.name,
-      } as EventOtherErrorInfo);
+      });
     }
     event.preventDefault();
   },

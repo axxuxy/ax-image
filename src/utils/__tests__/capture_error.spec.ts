@@ -107,7 +107,7 @@ describe.concurrent("Test capture error module.", async () => {
     /// Test vue error.
     const vueErrorButton = document.getElementById("vue-error")!;
     vueErrorButton.click();
-    const vueError = listenErrors[ErrorType.vue] as VueErrorInfo;
+    const vueError = <VueErrorInfo>listenErrors[ErrorType.vue];
     expect(vueError, "Not captured vue error.").toBeTruthy();
     expect(
       vueError.componentPath,
@@ -122,7 +122,7 @@ describe.concurrent("Test capture error module.", async () => {
     const eventErrorButton = document.getElementById("event-error")!;
     eventErrorButton.click();
     await sleep(100);
-    const eventError = listenErrors[ErrorType.event] as EventErrorInfo;
+    const eventError = <EventErrorInfo>listenErrors[ErrorType.event];
     expect(eventError, "Not captured event error.").toBeTruthy();
     expect(
       eventError.message,
@@ -147,7 +147,7 @@ describe.concurrent("Test capture error module.", async () => {
     const imageErrorButton = document.getElementById("image-error")!;
     imageErrorButton.click();
     await sleep(100);
-    const imageError = listenErrors[ErrorType.html] as HtmlErrorInfo;
+    const imageError = <HtmlErrorInfo>listenErrors[ErrorType.html];
     expect(
       imageError.html,
       "Captured html error element not is created image element."
@@ -162,13 +162,13 @@ describe.concurrent("Test capture error module.", async () => {
     const rejectErrorButton = document.getElementById("reject-error")!;
     rejectErrorButton.click();
     await sleep(1000);
-    const rejectError = listenErrors[ErrorType.async] as AsyncErrorInfo;
+    const rejectError = <AsyncErrorInfo>listenErrors[ErrorType.async];
     expect(
       rejectError.message,
       "Capture reject error isn't created reject error."
     ).toBe("Reject error");
 
-    (Object.keys(listenErrors) as Array<ErrorType>).forEach((key) => {
+    (<Array<ErrorType>>Object.keys(listenErrors)).forEach((key) => {
       delete listenErrors[key];
     });
 
