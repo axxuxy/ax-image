@@ -58,7 +58,7 @@ async function createWindow() {
     win.maximize();
     const vueDevtoolsPath = resolve(
       app.getPath("home"),
-      "AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/6.5.0_0"
+      "AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/6.5.0_1"
     );
     if (existsSync(vueDevtoolsPath))
       win.webContents.session.loadExtension(vueDevtoolsPath);
