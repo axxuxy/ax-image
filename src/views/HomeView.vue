@@ -46,11 +46,13 @@ const tags = computed(() => formatTags(tagOptions.value)?.split(" ")?.sort());
 const postsKey = computed(() =>
   [config.value.website, ...(tags.value ?? [])].join(" ")
 );
-const posts = ref<typeof PostList | null>(null);
+const posts = ref<InstanceType<typeof PostList>>();
 const update = ref(false);
 watch(update, async (value) => {
-  if (value) await posts.value?.update();
-  update.value = false;
+  if (value)
+    await posts.value?.update()?.finally(() => {
+      update.value = false;
+    });
 });
 
 function search(_: TagsOptions) {
