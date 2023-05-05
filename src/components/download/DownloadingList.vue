@@ -49,7 +49,7 @@ function dealDownload(download: ReturnType<typeof getDownloads>[number]) {
           size: download.size,
           sleep: download.sleep,
           error: !!download.downloadError,
-          isStop: download.isStop,
+          isStop: download.isStop || !!download.downloadError,
         },
       };
 }
