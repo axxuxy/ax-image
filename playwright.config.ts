@@ -1,5 +1,4 @@
 import type { PlaywrightTestConfig } from "@playwright/test";
-/// TODO Version 1.28.1 work abnormal.
 
 /**
  * Read environment variables from file.

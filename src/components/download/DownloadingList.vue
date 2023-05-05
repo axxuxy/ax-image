@@ -7,8 +7,8 @@ import {
 } from "@/utils/download";
 import { computed, onUnmounted, ref, shallowRef } from "vue";
 import { storeToRefs } from "pinia";
-import DownloadedItem from "@/components/DownloadedItem.vue";
-import DownloadingItem from "@/components/DownloadingItem.vue";
+import DownloadedItem from "@/components/download/DownloadedItem.vue";
+import DownloadingItem from "@/components/download/DownloadingItem.vue";
 import { Website } from "@/utils/website";
 import { db } from "@/utils/db";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -152,25 +152,27 @@ function openPost(download: DownloadItem) {
 </script>
 
 <template>
-  <ElScrollbar class="box">
-    <div class="tools">
-      <ElSelect v-model="website" clearable>
-        <template #prefix>
-          <span>{{ language.downloadingComponent.website.title }}:</span>
-        </template>
-        <ElOption
-          v-for="website in websites"
-          :key="website.website"
-          :label="website.name"
-          :value="website.website"
-        >
-        </ElOption>
-      </ElSelect>
-      <ElButton @click="update(true)">
-        <ElIcon>
-          <i-ep-refresh-left />
-        </ElIcon>
-      </ElButton>
+  <div class="box scrollbar">
+    <div class="tools-box">
+      <div class="tools">
+        <ElSelect v-model="website" clearable>
+          <template #prefix>
+            <span>{{ language.downloadingComponent.website.title }}:</span>
+          </template>
+          <ElOption
+            v-for="website in websites"
+            :key="website.website"
+            :label="website.name"
+            :value="website.website"
+          >
+          </ElOption>
+        </ElSelect>
+        <ElButton @click="update(true)">
+          <ElIcon>
+            <i-ep-refresh-left />
+          </ElIcon>
+        </ElButton>
+      </div>
     </div>
     <ul>
       <li v-for="download in showDownloadings" :key="download.key">
@@ -204,7 +206,7 @@ function openPost(download: DownloadItem) {
       :closable="false"
     >
     </ElAlert>
-  </ElScrollbar>
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -213,21 +215,25 @@ function openPost(download: DownloadItem) {
   padding: 0 20px;
   height: calc(100% + 20px);
 
-  .tools {
-    display: flex;
-    justify-content: end;
-    grid-gap: 12px;
+  .tools-box {
     position: sticky;
     top: 0;
     z-index: 10;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-    box-shadow: var(--el-box-shadow-lighter);
-    background-color: #fff;
+    margin: 0 -20px 15px;
+    padding: 0 20px;
+    background-color: #ffffff;
 
-    .el-select {
-      :deep(.el-input__wrapper) {
-        height: 30px;
+    .tools {
+      display: flex;
+      justify-content: end;
+      grid-gap: 12px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--el-border-color);
+
+      .el-select {
+        :deep(.el-input__wrapper) {
+          height: 30px;
+        }
       }
     }
   }

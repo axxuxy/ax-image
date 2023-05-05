@@ -1,39 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { getPosts, getTags, TagOrder, type Post, type Tag } from "@/utils/api";
+import {
+  getPostsApi,
+  getTagsApi,
+  TagOrder,
+  type Post,
+  type Tag,
+} from "@/utils/api";
 import { Website } from "@/utils/website";
 import "@/utils/__tools__/request";
-import { setupServer } from "msw/node";
-import { rest } from "msw";
 import { ProxyType, setProxy } from "@/utils/request";
-import { Order, RatingMode, RatingValue, TagMode } from "@/utils/format_tags";
+import {
+  CommonTag,
+  DateTag,
+  HeightTag,
+  IdTag,
+  MD5Tag,
+  MpixelsTag,
+  Order,
+  OrderTag,
+  ParentNoneTag,
+  ParentTag,
+  RatingMode,
+  RatingTag,
+  RatingValue,
+  ScoreTag,
+  SourceTag,
+  TagMode,
+  UserTag,
+  WidthTag,
+} from "@/utils/tags";
 import { toYMD } from "@/utils/date";
 
-const mock = false;
-if (mock) {
-  /// TODO Need realize mock api data.
-  setupServer(
-    rest.get(/post\.json/, (req, res, ctx) => {
-      throw new Error("Need realize mock data.");
-      return res(
-        ctx.status(200)
-        // ctx.json(posts),
-      );
-    }),
-    rest.get(/tag\.json/, (req, res, ctx) => {
-      throw new Error("Need realize mock data.");
-      return res(
-        ctx.status(200)
-        // ctx.json(posts),
-      );
-    })
-  );
-} else {
+const skipApi = true;
+if (!skipApi)
   setProxy({
     host: "127.0.0.1",
     port: 10808,
     type: ProxyType.socks5,
   });
-}
 
 const websites = Object.values(Website);
 
@@ -157,12 +161,12 @@ function checkOrder(posts: Array<Post>, order: Order): boolean {
   }
 }
 
-describe.skipIf(!mock)("Test get posts api.", async () => {
+describe.skipIf(skipApi)("Test get posts api.", async () => {
   it(
     "Test get posts api only input website.",
     async () => {
       for (const website of websites) {
-        const posts = await getPosts(website);
+        const posts = await getPostsApi(website);
 
         expect(Array.isArray(posts), "Get posts not's array.").toBe(true);
         expect(posts.length, "Get posts is empty.").toBeTruthy();
@@ -179,19 +183,14 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     async () => {
       for (const website of websites) {
         /// Get two tag, them certain has post.
-        const [{ name }, { name: name2 }] = await getTags(website, {
+        const [{ name }, { name: name2 }] = await getTagsApi(website, {
           order: TagOrder.count,
           limit: 2,
         });
 
         /// Test has tag.
-        const tagPosts = await getPosts(website, {
-          tags: [
-            {
-              name,
-              mode: TagMode.is,
-            },
-          ],
+        const tagPosts = await getPostsApi(website, {
+          tags: [new CommonTag(name)],
         });
         expect(
           tagPosts.length,
@@ -206,17 +205,11 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test not tag.
         await expect(
-          getPosts(website, {
+          getPostsApi(website, {
             tags: [
               /// Set has tag and not the tag, then not find post, else untrue.
-              {
-                name,
-                mode: TagMode.is,
-              },
-              {
-                name,
-                mode: TagMode.not,
-              },
+              new CommonTag(name),
+              new CommonTag(name, TagMode.not),
             ],
           }),
           `Set not tag not work, in website ${website}, tag is ${name}.`
@@ -224,16 +217,10 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test or tag.
         await expect(
-          getPosts(website, {
+          getPostsApi(website, {
             tags: [
-              {
-                name,
-                mode: TagMode.or,
-              },
-              {
-                name: name2,
-                mode: TagMode.or,
-              },
+              new CommonTag(name, TagMode.or),
+              new CommonTag(name2, TagMode.or),
             ],
           }),
           `Did not find a post with only one of the set tags, in website ${website}, tags is ${name} and ${name2}`
@@ -252,13 +239,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test use `*` as wildcard of tag.
         await expect(
-          getPosts(website, {
-            tags: [
-              {
-                mode: TagMode.is,
-                name: "*_*",
-              },
-            ],
+          getPostsApi(website, {
+            tags: [new CommonTag("*_*")],
           }),
           `Use \`*\` as wildcard not work well, in website ${website}.`
         ).resolves.toSatisfy((posts) =>
@@ -275,9 +257,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     "Test get posts by user of tags argument.",
     async () => {
       for (const website of websites) {
-        const [{ author }] = await getPosts(website, { limit: 1 });
+        const [{ author }] = await getPostsApi(website, { limit: 1 });
         await expect(
-          getPosts(website, { user: author }),
+          getPostsApi(website, { tags: [new UserTag(author)] }),
           `Get posts has post contain autnor is't ${author},in website ${website}.`
         ).resolves.toSatisfy(
           (posts) =>
@@ -302,10 +284,10 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     "Test get posts by md5 of tags argument.",
     async () => {
       for (const website of websites) {
-        const [{ md5 }] = await getPosts(website, { limit: 1 });
+        const [{ md5 }] = await getPostsApi(website, { limit: 1 });
 
         await expect(
-          getPosts(website, { md5 }),
+          getPostsApi(website, { tags: [new MD5Tag(md5)] }),
           `Get post md5 is not md5 argument, in website ${website}, md5 is ${md5}.`
         ).resolves.toSatisfy(
           (posts) =>
@@ -328,7 +310,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         for (const mode of ratingModes) {
           for (const value of ratingValues) {
             await expect(
-              getPosts(website, { rating: { mode, value } })
+              getPostsApi(website, { tags: [new RatingTag({ mode, value })] })
             ).resolves.toSatisfy((posts) => {
               switch (mode) {
                 case RatingMode.is:
@@ -359,7 +341,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     async () => {
       for (const website of websites) {
         /// Test get posts by source with use `*` as wildcard of `cource` argument.
-        const posts = await getPosts(website, { source: "*pixiv*" });
+        const posts = await getPostsApi(website, {
+          tags: [new SourceTag("*pixiv*")],
+        });
         expect(
           posts.length,
           `Not find source has \`pixiv\` post, in website ${website}.`
@@ -371,7 +355,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test get posts use specific `source` argument.
         const source = posts[0].source!;
-        const sourcePosts = await getPosts(website, { source });
+        const sourcePosts = await getPostsApi(website, {
+          tags: [new SourceTag(source)],
+        });
         expect(
           sourcePosts.length,
           `Not find post, in website ${website}, source is ${source}`
@@ -391,10 +377,10 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     "Test get posts by id of tags argument.",
     async () => {
       for (const website of websites) {
-        const [{ id }] = await getPosts(website);
+        const [{ id }] = await getPostsApi(website);
 
         /// Test get posts use specific `id` argument.
-        const posts = await getPosts(website, { id });
+        const posts = await getPostsApi(website, { tags: [new IdTag(id)] });
         expect(
           posts.length,
           `Not get posts use id argument, in website ${website}, id is ${id}.`
@@ -405,7 +391,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use max id argument.
-        const postsByOnlyMaxId = await getPosts(website, { id: { max: id } });
+        const postsByOnlyMaxId = await getPostsApi(website, {
+          tags: [new IdTag({ max: id })],
+        });
         expect(
           postsByOnlyMaxId.length > 0,
           `Not get posts use max id argument, in website ${website}, max id is ${id}.`
@@ -417,7 +405,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test get post use min id argument.
         const min = id - 20;
-        const postsByOnlyMinId = await getPosts(website, { id: { min } });
+        const postsByOnlyMinId = await getPostsApi(website, {
+          tags: [new IdTag({ min })],
+        });
         expect(
           postsByOnlyMinId.length > 0,
           `Not get posts use max id argument, in website ${website}, min id is ${min}.`
@@ -428,7 +418,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use range id argument.
-        const rangePosts = await getPosts(website, { id: { max: id, min } });
+        const rangePosts = await getPostsApi(website, {
+          tags: [new IdTag({ max: id, min })],
+        });
         expect(
           rangePosts.length > 0,
           `Not get posts use range of id argument, in website ${website}, min id is ${min}, max id is ${id}.`
@@ -451,7 +443,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const width = 1920;
 
         /// Test get posts use specific `width` argument.
-        const posts = await getPosts(website, { width });
+        const posts = await getPostsApi(website, {
+          tags: [new WidthTag(width)],
+        });
         expect(
           posts.length > 0,
           `Not get posts use width argument, in website ${website}, width is ${width}.`
@@ -462,8 +456,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use max width argument.
-        const postsByOnlyMaxWidth = await getPosts(website, {
-          width: { max: width },
+        const postsByOnlyMaxWidth = await getPostsApi(website, {
+          tags: [new WidthTag({ max: width })],
         });
         expect(
           postsByOnlyMaxWidth.length > 0,
@@ -476,7 +470,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test get post use min width argument.
         const min = 1280;
-        const postsByOnlyMinWidth = await getPosts(website, { width: { min } });
+        const postsByOnlyMinWidth = await getPostsApi(website, {
+          tags: [new WidthTag({ min })],
+        });
         expect(
           postsByOnlyMinWidth.length > 0,
           `Not get posts use max width argument, in website ${website}, min width is ${min}.`
@@ -487,8 +483,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use range width argument.
-        const rangePosts = await getPosts(website, {
-          width: { max: width, min },
+        const rangePosts = await getPostsApi(website, {
+          tags: [new WidthTag({ max: width, min })],
         });
         expect(
           rangePosts.length > 0,
@@ -512,7 +508,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const height = 1080;
 
         /// Test get posts use specific `height` argument.
-        const posts = await getPosts(website, { height });
+        const posts = await getPostsApi(website, {
+          tags: [new HeightTag(height)],
+        });
         expect(
           posts.length > 0,
           `Not get posts use height argument, in website ${website}, height is ${height}.`
@@ -523,8 +521,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use max height argument.
-        const postsByOnlyMaxHeight = await getPosts(website, {
-          height: { max: height },
+        const postsByOnlyMaxHeight = await getPostsApi(website, {
+          tags: [new HeightTag({ max: height })],
         });
         expect(
           postsByOnlyMaxHeight.length > 0,
@@ -537,8 +535,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test get post use min height argument.
         const min = 720;
-        const postsByOnlyMinHeight = await getPosts(website, {
-          height: { min },
+        const postsByOnlyMinHeight = await getPostsApi(website, {
+          tags: [new HeightTag({ min })],
         });
         expect(
           postsByOnlyMinHeight.length > 0,
@@ -550,8 +548,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use range height argument.
-        const rangePosts = await getPosts(website, {
-          height: { max: height, min },
+        const rangePosts = await getPostsApi(website, {
+          tags: [new HeightTag({ max: height, min })],
         });
         expect(
           rangePosts.length > 0,
@@ -577,7 +575,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const score = 20;
 
         /// Test get posts use specific `score` argument.
-        const posts = await getPosts(website, { score });
+        const posts = await getPostsApi(website, {
+          tags: [new ScoreTag(score)],
+        });
         expect(
           posts.length > 0,
           `Not get posts use score argument, in website ${website}, score is ${score}.`
@@ -588,8 +588,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use max score argument.
-        const postsByOnlyMaxScore = await getPosts(website, {
-          score: { max: score },
+        const postsByOnlyMaxScore = await getPostsApi(website, {
+          tags: [new ScoreTag({ max: score })],
         });
         expect(
           postsByOnlyMaxScore.length > 0,
@@ -602,8 +602,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test get post use min score argument.
         const min = 10;
-        const postsByOnlyMinScore = await getPosts(website, {
-          score: { min },
+        const postsByOnlyMinScore = await getPostsApi(website, {
+          tags: [new ScoreTag({ min })],
         });
         expect(
           postsByOnlyMinScore.length > 0,
@@ -615,8 +615,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use range score argument.
-        const rangePosts = await getPosts(website, {
-          score: { max: score, min },
+        const rangePosts = await getPostsApi(website, {
+          tags: [new ScoreTag({ max: score, min })],
         });
         expect(
           rangePosts.length > 0,
@@ -640,7 +640,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const mpixels = (1920 * 1080) / 1000000;
 
         /// Test get posts use specific `mpixels` argument.
-        const posts = await getPosts(website, { mpixels });
+        const posts = await getPostsApi(website, {
+          tags: [new MpixelsTag(mpixels)],
+        });
         expect(
           posts.length > 0,
           `Not get posts use mpixels argument, in website ${website}, mpixels is ${mpixels}.`
@@ -653,8 +655,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use max mpixels argument.
-        const postsByOnlyMaxMpixels = await getPosts(website, {
-          mpixels: { max: mpixels },
+        const postsByOnlyMaxMpixels = await getPostsApi(website, {
+          tags: [new MpixelsTag({ max: mpixels })],
         });
         expect(
           postsByOnlyMaxMpixels.length > 0,
@@ -669,8 +671,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
         /// Test get post use min mpixels argument.
         const min = (1280 * 720) / 1000000;
-        const postsByOnlyMinMpixels = await getPosts(website, {
-          mpixels: { min },
+        const postsByOnlyMinMpixels = await getPostsApi(website, {
+          tags: [new MpixelsTag({ min })],
         });
         expect(
           postsByOnlyMinMpixels.length > 0,
@@ -684,8 +686,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use range mpixels argument.
-        const rangePosts = await getPosts(website, {
-          mpixels: { max: mpixels, min },
+        const rangePosts = await getPostsApi(website, {
+          tags: [new MpixelsTag({ max: mpixels, min })],
         });
         expect(
           rangePosts.length > 0,
@@ -715,7 +717,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const dateYMD = toYMD(date);
 
         /// Test get posts use specific `date` argument.
-        const posts = await getPosts(website, { date });
+        const posts = await getPostsApi(website, { tags: [new DateTag(date)] });
         expect(
           posts.length > 0,
           `Not get posts use date argument, in website ${website}, date is ${dateYMD}.`
@@ -729,8 +731,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use max date argument.
-        const postsByOnlyMaxDate = await getPosts(website, {
-          date: { max: date },
+        const postsByOnlyMaxDate = await getPostsApi(website, {
+          tags: [new DateTag({ max: date })],
         });
         expect(
           postsByOnlyMaxDate.length > 0,
@@ -747,8 +749,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         const min = new Date(date);
         min.setDate(min.getDate() - 1);
         const minYMD = toYMD(min);
-        const postsByOnlyMinDate = await getPosts(website, {
-          date: { min },
+        const postsByOnlyMinDate = await getPostsApi(website, {
+          tags: [new DateTag({ min })],
         });
         expect(
           postsByOnlyMinDate.length > 0,
@@ -762,8 +764,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
         ).toBe(true);
 
         /// Test get post use range date argument.
-        const rangePosts = await getPosts(website, {
-          date: { max: date, min },
+        const rangePosts = await getPostsApi(website, {
+          tags: [new DateTag({ max: date, min })],
         });
         expect(
           rangePosts.length > 0,
@@ -794,7 +796,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
 
       for (const website of websites) {
         for (const order of orders) {
-          const posts = await getPosts(website, { order });
+          const posts = await getPostsApi(website, {
+            tags: [new OrderTag(order)],
+          });
           expect(
             posts.length > 0,
             `Get post by order not has post, in website ${website}, order is ${order}.`
@@ -819,7 +823,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           let page = 0;
           while (++page) {
             const parentId = ((post?: Post) => post?.parent_id || post?.id)(
-              (await getPosts(website, { page })).find(
+              (await getPostsApi(website, { page })).find(
                 (post) => post.parent_id || post.has_children
               )
             );
@@ -827,7 +831,9 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           }
         })())!;
 
-        const posts = await getPosts(website, { parent });
+        const posts = await getPostsApi(website, {
+          tags: [new ParentTag(parent)],
+        });
         expect(
           posts.length > 0,
           `Get posts by parent argument not post, in website ${website}, parent is ${parent}.`
@@ -839,12 +845,11 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
           `Get posts has post parent id isn't input parent argument, in website ${website}, parent is ${parent}.`
         ).toBe(true);
 
-        const notParentPosts = await getPosts(website, {
-          id: {
-            max: parent + 10,
-            min: parent - 10,
-          },
-          parent: false,
+        const notParentPosts = await getPostsApi(website, {
+          tags: [
+            new IdTag({ max: parent + 10, min: parent - 10 }),
+            new ParentNoneTag(),
+          ],
         });
         expect(
           notParentPosts.length > 0,
@@ -863,8 +868,8 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     "Test get posts by page argument.",
     async () => {
       for (const website of websites) {
-        const postsPage2 = await getPosts(website, { page: 2 });
-        const postsPage1 = await getPosts(website, { page: 1 });
+        const postsPage2 = await getPostsApi(website, { page: 2 });
+        const postsPage1 = await getPostsApi(website, { page: 1 });
         const page1LastPostId = postsPage1[postsPage1.length - 1].id;
         const page2FirstPostId = postsPage2[0].id;
         expect(
@@ -881,7 +886,7 @@ describe.skipIf(!mock)("Test get posts api.", async () => {
     async () => {
       for (const website of websites) {
         await expect(
-          getPosts(website, { limit: 20 }),
+          getPostsApi(website, { limit: 20 }),
           `Get posts limit argument invalid, in website ${website}`
         ).resolves.toHaveLength(20);
       }
@@ -898,7 +903,7 @@ function checkTag(tag: Tag): boolean {
     typeof tag.count === "number" &&
     typeof tag.id === "number" &&
     typeof tag.name === "string" &&
-    typeof tag.type === "number"
+    typeof tag.type === "string"
   );
 }
 
@@ -929,16 +934,25 @@ function checkTagOrder(tags: Array<Tag>, order: TagOrder): boolean {
   }
 }
 
-describe.skipIf(!mock)("Test get tag api.", async () => {
-  it(
+describe.skipIf(skipApi)("Test get tag api.", async () => {
+  it.only(
     "Test get tags only input website.",
     async () => {
       for (const website of websites) {
-        const tags = await getTags(website);
+        const tags = await getTagsApi(website);
 
-        expect(Array.isArray(tags), "Get tags not's array.").toBe(true);
-        expect(tags.length, "Get tags is empty.").toBeTruthy();
-        expect(tags.every(checkTag), "Get tags format untrue.").toBe(true);
+        expect(
+          Array.isArray(tags),
+          `Get tags not's array, website is ${website}.`
+        ).toBe(true);
+        expect(
+          tags.length,
+          `Get tags is empty, website is ${website}`
+        ).toBeTruthy();
+        expect(
+          tags.every(checkTag),
+          `Get tags format untrue, website is ${website}.`
+        ).toBe(true);
       }
     },
     { timeout: 100000 }
@@ -950,7 +964,7 @@ describe.skipIf(!mock)("Test get tag api.", async () => {
       for (const website of websites) {
         const limit = 5 + Math.floor(Math.random() * 5);
         await expect(
-          getTags(website, { limit }),
+          getTagsApi(website, { limit }),
           `Test get tags use limit argument not work, website is ${website}, limit is ${limit}`
         ).resolves.toHaveLength(limit);
       }
@@ -967,14 +981,14 @@ describe.skipIf(!mock)("Test get tag api.", async () => {
 
       for (const website of websites) {
         for (const order of tagOrders) {
-          const tags = await getTags(website, { order });
+          const tags = await getTagsApi(website, { order });
           expect(
             tags.length > 0,
             `Not get tags in use order argument, in website ${website}, order is ${order}.`
           ).toBe(true);
 
           /// In website konachan name tag order abnormal.
-          if (!mock && website !== Website.konachan)
+          if (website !== Website.konachan)
             expect(
               checkTagOrder(tags, order),
               `The input order argument not work, in website ${website}, order is ${order}`
@@ -989,8 +1003,8 @@ describe.skipIf(!mock)("Test get tag api.", async () => {
     "Test get tags by id argument.",
     async () => {
       for (const website of websites) {
-        const [{ id }] = await getTags(website, { limit: 1 });
-        const tags = await getTags(website, { id });
+        const [{ id }] = await getTagsApi(website, { limit: 1 });
+        const tags = await getTagsApi(website, { id });
         expect(tags.length > 0, `Not get tags, in website ${website}.`).toBe(
           true
         );
@@ -1007,8 +1021,8 @@ describe.skipIf(!mock)("Test get tag api.", async () => {
     "Test get tags by afterId argument.",
     async () => {
       for (const website of websites) {
-        const [{ id: afterId }] = await getTags(website);
-        const tags = await getTags(website, { afterId });
+        const [{ id: afterId }] = await getTagsApi(website);
+        const tags = await getTagsApi(website, { afterId });
         expect(
           tags.length > 0,
           `Not get tags use after id argument, in website ${website}, after id is ${afterId}`
@@ -1028,8 +1042,8 @@ describe.skipIf(!mock)("Test get tag api.", async () => {
     "Test get tags by name argument.",
     async () => {
       for (const website of websites) {
-        const [{ name }] = await getTags(website, { limit: 1 });
-        const tags = await getTags(website, { name });
+        const [{ name }] = await getTagsApi(website, { limit: 1 });
+        const tags = await getTagsApi(website, { name });
         expect(
           tags.length > 0,
           `Not get tags use name argument, in website ${website}, name is ${name}`

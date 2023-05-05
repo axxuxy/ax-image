@@ -8,6 +8,7 @@
     "package.json"
   ],
   "compilerOptions": {
+    "ignoreDeprecations":"5.0",
     "composite": true,
     "types": [
       "node"

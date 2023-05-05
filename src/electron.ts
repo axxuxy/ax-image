@@ -38,7 +38,7 @@ async function createWindow() {
   const preload = resolve(__dirname, "preload.js");
 
   win = new BrowserWindow({
-    title: "Main window",
+    title: "ax-image",
     icon: app.isPackaged
       ? join(__dirname, "../renderer/favicon.ico")
       : join(__dirname, "../../public/favicon.ico"),
@@ -56,12 +56,13 @@ async function createWindow() {
 
   if (process.env.DEV_URL) {
     win.maximize();
-    const vueDevtoolsPath = resolve(
-      app.getPath("home"),
-      "AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/6.5.0_1"
-    );
-    if (existsSync(vueDevtoolsPath))
-      win.webContents.session.loadExtension(vueDevtoolsPath);
+    const vueDevtoolsPath = [
+      "AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/6.5.0_0",
+      "AppData/Local/Google/Chrome/User Data/Default/Extensions/nhdogjmejiglipccpnnnanhbledajbpd/6.5.0_1",
+    ]
+      .map((_) => resolve(app.getPath("home"), _))
+      .find((_) => existsSync(_));
+    if (vueDevtoolsPath) win.webContents.session.loadExtension(vueDevtoolsPath);
     await win.loadURL(process.env.DEV_URL);
     win.webContents.openDevTools();
   } else {

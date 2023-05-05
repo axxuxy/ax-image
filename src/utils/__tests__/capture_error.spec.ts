@@ -16,7 +16,9 @@ function sleep(timeout: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, timeout));
 }
 
-/// The class not defined, need to realize.
+/**
+ * The class not defined, need to realize.
+ */
 class PromiseRejectionEvent<T> extends Event {
   reason!: Error;
   promise!: Promise<T>;
@@ -63,11 +65,12 @@ describe.concurrent("Test capture error module.", async () => {
         },
         eventError() {
           if (!this.button) {
-            this.button = document.createElement("button");
-            this.button.addEventListener("click", function () {
+            const button = document.createElement("button");
+            button.addEventListener("click", function () {
               throw new Error("Event error");
             });
-            document.body.append(this.button);
+            document.body.append(button);
+            this.button = button;
           }
           this.button.click();
         },

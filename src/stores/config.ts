@@ -5,7 +5,7 @@ import { setProxy as setRequestProxy } from "@/utils/request";
 import { ipcRenderer } from "electron";
 import { resolve } from "path";
 import { setMaxDownloadCount } from "@/utils/download";
-import { RatingMode, RatingValue } from "@/utils/format_tags";
+import { RatingMode, RatingValue } from "@/utils/tags";
 import { setRating } from "@/utils/api";
 
 export const useConfig = defineStore("config", () => {
@@ -29,7 +29,6 @@ export const useConfig = defineStore("config", () => {
 
   const downloadMaxCount = ref(
     (() => {
-      // return 0;
       const _ = localStorage.getItem("download-max-count");
       if (!_) return 5;
       try {

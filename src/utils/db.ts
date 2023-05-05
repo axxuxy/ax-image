@@ -25,9 +25,9 @@ class DownloadDexie extends Dexie {
     first,
   }: {
     website?: Website;
+    first?: Date;
     last?: Date;
     limit?: number;
-    first?: Date; /// TODO Test the argument.
   } = {}): Promise<DownloadedInfo[]> {
     let collection = this.downloaded.orderBy("downloaded_at").reverse();
 
@@ -41,7 +41,7 @@ class DownloadDexie extends Dexie {
 
     if (first)
       collection = collection.filter(
-        (item: DownloadedInfo) => item.download_at >= first
+        (item: DownloadedInfo) => item.downloaded_at >= first
       );
 
     return collection.limit(limit).toArray();

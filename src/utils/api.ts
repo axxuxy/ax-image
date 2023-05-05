@@ -1,16 +1,11 @@
 import Request from "@/utils/request";
 import { getBaseURLBySite, Website } from "@/utils/website";
 import {
-  formatTags,
-  type TagsOptions,
-  type Rating,
+  RatingTag,
+  Tag as FormatTag,
   RatingValue,
-} from "@/utils/format_tags";
-
-export interface GetPostsOption extends TagsOptions {
-  limit?: number;
-  page?: number;
-}
+  type Rating,
+} from "@/utils/tags";
 
 let rating: Rating | undefined;
 export function setRating(_?: Rating) {
@@ -66,27 +61,38 @@ export interface Post {
   last_commented_at?: number;
 }
 
+interface GetPostsOption {
+  tags?: Array<FormatTag>;
+  limit?: number;
+  page?: number;
+}
+
 /**
- *
- * @param {GetPostsOption} option
- * @param {Date} option.date In website use is UTC time.
+ * Get posts.
+ * @param {Website} website - Webiste
+ * @param {GetPostsOption} option - Option.
+ * @param {AbortSignal} signal - Request signal.
+ * @returns {Array<Post>} - Post list.
  */
-export function getPosts(
+export function getPostsApi(
   website: Website,
-  option: GetPostsOption = {}
+  option: GetPostsOption = {},
+  signal?: AbortSignal
 ): Promise<Array<Post>> {
   const url = new URL(getBaseURLBySite(website));
   url.pathname = "post.json";
 
-  if (!option.rating) option.rating = rating;
-  const tags = formatTags(option);
-  if (tags) url.searchParams.set("tags", tags);
+  const tags = option.tags ?? [];
+  if (rating && tags.every((_) => !(_ instanceof RatingTag)))
+    tags.push(new RatingTag(rating));
+  if (tags.length)
+    url.searchParams.set("tags", tags.map((_) => _.tag).join(" "));
 
   const { limit = 100, page } = option;
   url.searchParams.set("limit", limit.toString());
   if (page) url.searchParams.set("page", page.toString());
 
-  return new Request(url).getJson<Array<Post>>();
+  return new Request(url).getJson<Array<Post>>(signal);
 }
 
 export enum TagOrder {
@@ -179,9 +185,10 @@ export interface Tag {
   ambiguous: boolean;
 }
 
-export async function getTags(
+export async function getTagsApi(
   website: Website,
-  { limit, order, id, afterId, name }: GetTagsOption = {}
+  { limit, order, id, afterId, name }: GetTagsOption = {},
+  signal?: AbortSignal
 ): Promise<Array<Tag>> {
   const url = new URL(getBaseURLBySite(website));
   url.pathname = "tag.json";
@@ -192,7 +199,7 @@ export async function getTags(
   if (typeof afterId === "number")
     url.searchParams.append("after_id", afterId.toString());
   if (name) url.searchParams.append("name", name);
-  return (await new Request(url).getJson<Array<ApiTag>>()).map((tag) => ({
+  return (await new Request(url).getJson<Array<ApiTag>>(signal)).map((tag) => ({
     ...tag,
     type: getTagType(website, tag.type),
   }));

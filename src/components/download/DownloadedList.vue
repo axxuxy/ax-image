@@ -3,10 +3,10 @@ import { db } from "@/utils/db";
 import type { DownloadedInfo } from "@/utils/download";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { existsSync, rmSync } from "fs";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, shallowRef, watch } from "vue";
 import { useLanguage } from "@/stores/language";
 import { storeToRefs } from "pinia";
-import DownloadedItem from "@/components/DownloadedItem.vue";
+import DownloadedItem from "@/components/download/DownloadedItem.vue";
 import { Website } from "@/utils/website";
 
 const { language } = storeToRefs(useLanguage());
@@ -14,7 +14,7 @@ const emit = defineEmits<{
   (event: "openPost", downloaded: DownloadedInfo): void;
 }>();
 
-const downloadeds = ref<Array<DownloadedInfo & { key: string }>>([]);
+const downloadeds = shallowRef<Array<DownloadedInfo & { key: string }>>([]);
 const noMore = ref(false);
 const loading = ref(false);
 
@@ -28,8 +28,8 @@ function loadDownloaded(limit = 10) {
 
   return db
     .queryDownloadedInfos({
-      last,
       first,
+      last,
       limit,
       website: website.value,
     })
@@ -106,33 +106,35 @@ watch([date, website], update);
 </script>
 
 <template>
-  <ElScrollbar class="box">
-    <div class="tools">
-      <ElSelect v-model="website" clearable :disabled="loading">
-        <template #prefix>
-          <span>{{ language.downloadedComponent.website.title }}</span>
-          <span>:</span>
-        </template>
-        <ElOption
-          v-for="website in websites"
-          :key="website.website"
-          :label="website.name"
-          :value="website.website"
+  <div class="box scrollbar">
+    <div class="tools-box">
+      <div class="tools">
+        <ElSelect v-model="website" clearable :disabled="loading">
+          <template #prefix>
+            <span>{{ language.downloadedComponent.website.title }}</span>
+            <span>:</span>
+          </template>
+          <ElOption
+            v-for="website in websites"
+            :key="website.website"
+            :label="website.name"
+            :value="website.website"
+          >
+          </ElOption>
+        </ElSelect>
+        <ElDatePicker
+          v-model="date"
+          type="date"
+          :disabled="loading"
+          :placeholder="language.downloadedComponent.date.title"
         >
-        </ElOption>
-      </ElSelect>
-      <ElDatePicker
-        v-model="date"
-        type="date"
-        :disabled="loading"
-        :placeholder="language.downloadedComponent.date.title"
-      >
-      </ElDatePicker>
-      <ElButton @click="update" :disabled="loading">
-        <ElIcon>
-          <i-ep-refresh-left />
-        </ElIcon>
-      </ElButton>
+        </ElDatePicker>
+        <ElButton @click="update" :disabled="loading">
+          <ElIcon>
+            <i-ep-refresh-left />
+          </ElIcon>
+        </ElButton>
+      </div>
     </div>
     <ul
       v-infinite-scroll="loadDownloaded"
@@ -172,7 +174,7 @@ watch([date, website], update);
         <i-ep-loading />
       </ElIcon>
     </ElAlert>
-  </ElScrollbar>
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -181,21 +183,25 @@ watch([date, website], update);
   padding: 0 20px;
   height: calc(100% + 20px);
 
-  .tools {
-    display: flex;
-    justify-content: end;
-    grid-gap: 12px;
+  .tools-box {
     position: sticky;
     top: 0;
     z-index: 10;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-    box-shadow: var(--el-box-shadow-lighter);
-    background-color: #fff;
+    margin: 0 -20px 15px;
+    padding: 0 20px;
+    background-color: #ffffff;
 
-    .el-select {
-      :deep(.el-input__wrapper) {
-        height: 30px;
+    .tools {
+      display: flex;
+      justify-content: end;
+      grid-gap: 12px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--el-border-color);
+
+      .el-select {
+        :deep(.el-input__wrapper) {
+          height: 30px;
+        }
       }
     }
   }

@@ -26,7 +26,7 @@ li {
 }
 
 :root {
-  /// The colors corresponding to all tag type.
+  /** The colors corresponding to all tag type. */
   --tag-general: burlyWood;
   --tag-artist: coral;
   --tag-copyright: purple;
@@ -34,84 +34,82 @@ li {
   --tag-circle: teal;
   --tag-style: orange;
   --tag-faults: red;
+  --tag-meta: #000;
+  --tag-text-color: #fff;
 
   .--tag {
-    transition: opacity 200ms;
-
-    &.select {
-      cursor: pointer;
-
-      &:hover {
-        opacity: 0.54;
-      }
-    }
-
+    background-color:var(--tag-color);
     &,
     &>.el-tag__close,
     .--tag-mode {
-      color: white;
-      vertical-align: baseline;
+      color: var(--tag-text-color);
     }
-
     &>.el-tag__close:hover {
-      background-color: white;
+      color:var(--tag-color);
+      background-color: var(--tag-text-color);
     }
 
 
     &.--tag-general {
-      background-color: var(--tag-general);
-
-      &>.el-tag__close:hover {
-        color: var(--tag-general);
-      }
+      --tag-color: var(--tag-general);
     }
 
     &.--tag-artist {
-      background-color: var(--tag-artist);
-
-      &>.el-tag__close:hover {
-        color: var(--tag-artist);
-      }
+      --tag-color: var(--tag-artist);
     }
 
     &.--tag-copyright {
-      background-color: var(--tag-copyright);
-
-      &>.el-tag__close:hover {
-        color: var(--tag-copyright);
-      }
+      --tag-color: var(--tag-copyright);
     }
 
     &.--tag-character {
-      background-color: var(--tag-character);
-
-      &>.el-tag__close:hover {
-        color: var(--tag-character);
-      }
+      --tag-color: var(--tag-character);
     }
 
     &.--tag-circle {
-      background-color: var(--tag-circle);
-
-      &>.el-tag__close:hover {
-        color: var(--tag-circle);
-      }
+      --tag-color: var(--tag-circle);
     }
 
     &.--tag-style {
-      background-color: var(--tag-style);
-
-      &>.el-tag__close:hover {
-        color: var(--tag-style);
-      }
+      --tag-color: var(--tag-style);
     }
 
     &.--tag-faults {
-      background-color: var(--tag-faults);
+      --tag-color: var(--tag-faults);
+    }
 
-      &>.el-tag__close:hover {
-        color: var(--tag-faults);
-      }
+    &.--tag-meta {
+      --tag-color:var(--tag-meta);
     }
   }
+}
+
+.scrollbar {
+  overflow: overlay;
+
+  &::-webkit-scrollbar {
+    max-width: 6px;
+    max-height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    height: 120px;
+    width: 120px;
+    border-radius: 3px;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+.el-date-editor{
+  /** If mouse not hover in date editor picker, clear icon no show,  lack clear icon width.
+  * Else set date editor picker to flex make that fill that.
+  */
+  display: inline-flex !important;
 }
