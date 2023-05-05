@@ -143,9 +143,9 @@ export default class {
     });
   }
 
-  private result(): Promise<Buffer> {
+  private result(signal?: AbortSignal): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
-      this.request()
+      this.request(signal)
         .once("response", (response) => {
           if (!response.statusCode?.toString().startsWith("2"))
             return reject(
@@ -165,7 +165,7 @@ export default class {
     });
   }
 
-  getJson<T>(): Promise<T> {
-    return this.result().then((buffer) => JSON.parse(buffer.toString()));
+  getJson<T>(signal?: AbortSignal): Promise<T> {
+    return this.result(signal).then((buffer) => JSON.parse(buffer.toString()));
   }
 }

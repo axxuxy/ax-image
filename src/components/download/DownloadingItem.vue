@@ -131,7 +131,6 @@ const percentage = computed(() =>
   }
 
   .action {
-    // padding-left: 8px;
     white-space: nowrap;
   }
 }

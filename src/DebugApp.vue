@@ -27,7 +27,7 @@ const route = useRoute();
   </ElContainer>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .routes {
   height: 100vh;
 }

@@ -74,11 +74,11 @@ async function changeDownload() {
 }
 
 function to(id: string) {
-  const box = document.querySelector("#setting-page>.el-scrollbar__wrap");
-  const item = box?.querySelector(`#${id}`);
+  const box = document.querySelector("#setting-content")!;
+  const item = box.querySelector(`#${id}`);
   if (!item) throw new Error(`Not find the element, the element is ${id}.`);
 
-  box!.scrollTo({
+  box.scrollTo({
     top: box!.scrollTop + item.getBoundingClientRect().top - 70,
     behavior: "smooth",
   });
@@ -86,146 +86,141 @@ function to(id: string) {
 </script>
 
 <template>
-  <ElScrollbar id="setting-page" height="100vh">
+  <ElContainer>
+    <ElHeader>
+      <ElPageHeader @back="router.back">
+        <template #content>
+          <h1>{{ language.settingsPage.title }}</h1>
+        </template>
+      </ElPageHeader>
+    </ElHeader>
     <ElContainer>
-      <ElHeader>
-        <ElPageHeader @back="router.back">
-          <template #content>
-            <h1>{{ language.settingsPage.title }}</h1>
-          </template>
-        </ElPageHeader>
-      </ElHeader>
-      <ElContainer>
-        <ElAside>
-          <ElScrollbar>
-            <ElMenu class="menu" @select="to">
-              <ElMenuItem index="proxy">
-                <ElIcon>
-                  <i-ep-promotion />
-                </ElIcon>
-                <span>{{ language.settingsPage.context.proxy.title }}</span>
-              </ElMenuItem>
-              <ElMenuItem index="download">
-                <ElIcon>
-                  <i-ep-download />
-                </ElIcon>
-                <span>{{ language.settingsPage.context.download.title }}</span>
-              </ElMenuItem>
-              <ElMenuItem index="rating">
-                <ElIcon>
-                  <i-ep-umbrella />
-                </ElIcon>
-                <span>{{ language.settingsPage.context.rating.title }}</span>
-              </ElMenuItem>
-            </ElMenu>
-          </ElScrollbar>
-        </ElAside>
-        <ElMain>
-          <h2 id="proxy">{{ language.settingsPage.context.proxy.title }}</h2>
-          <ElForm>
-            <ElFormItem>
-              <ElInput
-                class="proxy"
-                v-model="proxyHost"
-                :placeholder="language.settingsPage.context.proxy.setProxyHost"
-              >
-                <template #prepend>
-                  <ElSelect
-                    v-model="proxyType"
-                    clearable
-                    :placeholder="
-                      language.settingsPage.context.proxy.setProxyType
-                    "
-                  >
-                    <ElOption
-                      v-for="proxyType in proxyTypes"
-                      :key="proxyType"
-                      :value="proxyType"
-                    ></ElOption>
-                  </ElSelect>
-                </template>
-                <template #append>
-                  <ElInputNumber
-                    class="port"
-                    v-model="proxyPort"
-                    :step="1"
-                    :min="0"
-                    step-strictly
-                    :placeholder="
-                      language.settingsPage.context.proxy.setProxyPort
-                    "
-                  ></ElInputNumber>
-                </template>
-              </ElInput>
-            </ElFormItem>
-            <ElFormItem>
-              <ElButton @click="setProxy" :disabled="settingProxy">{{
-                language.settingsPage.context.proxy.settingProxy
-              }}</ElButton>
-              <ElButton @click="clearProxy" :disabled="settingProxy">{{
-                language.settingsPage.context.proxy.clearProxy
-              }}</ElButton>
-            </ElFormItem>
-          </ElForm>
-          <ElDivider></ElDivider>
-          <h2 id="download">
-            {{ language.settingsPage.context.download.title }}
-          </h2>
-          <ElForm>
-            <ElFormItem>
-              <ElInput class="download" v-model="downloadSaveDir" readonly>
-                <template #prepend>
-                  {{ language.settingsPage.context.download.downloadPath }}
-                </template>
-                <template #append>
-                  <ElButton @click="changeDownload">{{
-                    language.settingsPage.context.download.changeDownload
-                  }}</ElButton>
-                </template>
-              </ElInput>
-            </ElFormItem>
-          </ElForm>
-          <ElForm>
-            <ElFormItem>
-              <div class="download-count">
-                <div class="download-prepend">
-                  <span>{{
-                    language.settingsPage.context.download
-                      .downloadConcurrentCount
-                  }}</span>
-                </div>
+      <ElAside>
+        <ElMenu class="menu" @select="to">
+          <ElMenuItem index="proxy">
+            <ElIcon>
+              <i-ep-promotion />
+            </ElIcon>
+            <span>{{ language.settingsPage.context.proxy.title }}</span>
+          </ElMenuItem>
+          <ElMenuItem index="download">
+            <ElIcon>
+              <i-ep-download />
+            </ElIcon>
+            <span>{{ language.settingsPage.context.download.title }}</span>
+          </ElMenuItem>
+          <ElMenuItem index="rating">
+            <ElIcon>
+              <i-ep-umbrella />
+            </ElIcon>
+            <span>{{ language.settingsPage.context.rating.title }}</span>
+          </ElMenuItem>
+        </ElMenu>
+      </ElAside>
+      <ElMain id="setting-content" class="scrollbar">
+        <h2 id="proxy">{{ language.settingsPage.context.proxy.title }}</h2>
+        <ElForm>
+          <ElFormItem>
+            <ElInput
+              class="proxy"
+              v-model="proxyHost"
+              :placeholder="language.settingsPage.context.proxy.setProxyHost"
+            >
+              <template #prepend>
+                <ElSelect
+                  v-model="proxyType"
+                  clearable
+                  :placeholder="
+                    language.settingsPage.context.proxy.setProxyType
+                  "
+                >
+                  <ElOption
+                    v-for="proxyType in proxyTypes"
+                    :key="proxyType"
+                    :value="proxyType"
+                  ></ElOption>
+                </ElSelect>
+              </template>
+              <template #append>
                 <ElInputNumber
-                  v-model="downloadMaxCount"
+                  class="port"
+                  v-model="proxyPort"
+                  :step="1"
                   :min="0"
                   step-strictly
-                  :step="1"
-                />
+                  :placeholder="
+                    language.settingsPage.context.proxy.setProxyPort
+                  "
+                ></ElInputNumber>
+              </template>
+            </ElInput>
+          </ElFormItem>
+          <ElFormItem>
+            <ElButton @click="setProxy" :disabled="settingProxy">{{
+              language.settingsPage.context.proxy.settingProxy
+            }}</ElButton>
+            <ElButton @click="clearProxy" :disabled="settingProxy">{{
+              language.settingsPage.context.proxy.clearProxy
+            }}</ElButton>
+          </ElFormItem>
+        </ElForm>
+        <ElDivider></ElDivider>
+        <h2 id="download">
+          {{ language.settingsPage.context.download.title }}
+        </h2>
+        <ElForm>
+          <ElFormItem>
+            <ElInput class="download" v-model="downloadSaveDir" readonly>
+              <template #prepend>
+                {{ language.settingsPage.context.download.downloadPath }}
+              </template>
+              <template #append>
+                <ElButton @click="changeDownload">{{
+                  language.settingsPage.context.download.changeDownload
+                }}</ElButton>
+              </template>
+            </ElInput>
+          </ElFormItem>
+        </ElForm>
+        <ElForm>
+          <ElFormItem>
+            <div class="download-count">
+              <div class="download-prepend">
+                <span>{{
+                  language.settingsPage.context.download.downloadConcurrentCount
+                }}</span>
               </div>
-            </ElFormItem>
-          </ElForm>
-          <ElDivider></ElDivider>
-          <h2 id="rating">
-            {{ language.settingsPage.context.rating.title }}
-          </h2>
-          <ElForm>
-            <ElSwitch
-              :active-text="language.settingsPage.context.rating.active"
-              inline-prompt
-              :inactive-text="language.settingsPage.context.rating.inactive"
-              v-model="rating"
-              size="large"
-            >
-            </ElSwitch>
-          </ElForm>
-        </ElMain>
-      </ElContainer>
+              <ElInputNumber
+                v-model="downloadMaxCount"
+                :min="0"
+                step-strictly
+                :step="1"
+              />
+            </div>
+          </ElFormItem>
+        </ElForm>
+        <ElDivider></ElDivider>
+        <h2 id="rating">
+          {{ language.settingsPage.context.rating.title }}
+        </h2>
+        <ElForm>
+          <ElSwitch
+            :active-text="language.settingsPage.context.rating.active"
+            inline-prompt
+            :inactive-text="language.settingsPage.context.rating.inactive"
+            v-model="rating"
+            size="large"
+          >
+          </ElSwitch>
+        </ElForm>
+      </ElMain>
     </ElContainer>
-  </ElScrollbar>
+  </ElContainer>
 </template>
 
 <style lang="scss" scoped>
-#setting-page > :deep(.el-scrollbar__bar) {
-  z-index: 100;
+#setting-content {
+  height: calc(100vh - 60px);
 }
 
 header {

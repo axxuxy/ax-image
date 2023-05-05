@@ -51,7 +51,7 @@ function openImageInFolder() {
 </script>
 
 <template>
-  <ElCard>
+  <ElCard shadow="hover">
     <div class="downloaded" :class="{ exists }">
       <ElImage
         :src="previewUrl || url"
@@ -175,7 +175,6 @@ function openImageInFolder() {
   }
 
   .tools {
-    // padding-left: 8px;
     flex-shrink: 0;
   }
 }

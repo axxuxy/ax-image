@@ -6,7 +6,6 @@ import router from "@/router";
 
 import "@/assets/main.scss";
 
-import ElementPlus from "element-plus";
 import {
   vueCaptureErrorPlugin,
   addErrorEventListener,
@@ -26,7 +25,6 @@ import {
 import type { Post } from "@/utils/api";
 import type { Website } from "@/utils/website";
 import { db } from "@/utils/db";
-/// FIXME In open tags filter, more ... delay time.
 
 addErrorEventListener((errorInfo) => {
   console.error(errorInfo);
@@ -34,11 +32,16 @@ addErrorEventListener((errorInfo) => {
 
 const app = createApp(App);
 
-app.use(ElementPlus);
 app.use(vueCaptureErrorPlugin);
 
 app.use(createPinia());
 app.use(router);
+
+app.directive("focus", {
+  mounted(element: HTMLElement, binding) {
+    if (binding.value ?? true) element.querySelector("input")?.focus();
+  },
+});
 
 const proxy = localStorage.getItem("proxy");
 if (proxy)

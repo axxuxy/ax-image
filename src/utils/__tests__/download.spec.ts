@@ -10,6 +10,8 @@ import {
   removeDwonloadListen,
   setMaxDownloadCount,
   type _,
+  DownloadOption,
+  type ValidDownloadOption,
 } from "@/utils/download";
 import { getPost } from "@/utils/__tools__/posts";
 import { Website } from "@/utils/website";
@@ -48,7 +50,9 @@ describe("Test download module.", () => {
   afterEach(() => serve.resetHandlers());
   afterAll(() => serve.close());
 
-  /// Cannot run concurrent mode, because add all download share.
+  /**
+   * Cannot run concurrent mode, because add all download share.
+   */
   it("Test download module download, download setting, download stop function.", async () => {
     /// Start check has download item.
     expect(
@@ -63,11 +67,9 @@ describe("Test download module.", () => {
 
     /// Check add download whether work.
     download({
-      website,
-      downloadType,
-      post,
+      ...new DownloadOption({ website, downloadType, post }),
       savePath,
-    });
+    } as ValidDownloadOption);
     const downloads = getDownloads();
     expect(
       downloads.length,
@@ -99,11 +101,13 @@ describe("Test download module.", () => {
     const website2 = Website.yande;
     const post2 = _getPost(Website.yande);
     download({
-      website: website2,
-      post: post2,
-      downloadType: DownloadType.jpeg,
+      ...new DownloadOption({
+        website: website2,
+        post: post2,
+        downloadType: DownloadType.jpeg,
+      }),
       savePath: resolve(__dirname, "__temp__", "save2_path"),
-    });
+    } as ValidDownloadOption);
     expect(
       getDownloads(),
       "Not abnormal work, add the second download item."
@@ -148,11 +152,13 @@ describe("Test download module.", () => {
     /// Listen stop download.
     const awaitSavePath = resolve(__dirname, "__temp__", "listen-await.txt");
     download({
-      website: Website.konachan,
-      post: _getPost(Website.konachan),
-      downloadType: DownloadType.file,
+      ...new DownloadOption({
+        website: Website.konachan,
+        post: _getPost(Website.konachan),
+        downloadType: DownloadType.file,
+      }),
       savePath: awaitSavePath,
-    });
+    } as ValidDownloadOption);
     const awaitDownloads = getDownloads();
     expect(
       awaitDownloads.length,
@@ -186,11 +192,13 @@ describe("Test download module.", () => {
     /// List failed download.
     const failedSavePath = resolve(__dirname, "__temp__", "listen-failed.txt");
     download({
-      website: Website.konachan,
-      post: _getPost(Website.konachan, failedUrl),
-      downloadType: DownloadType.file,
+      ...new DownloadOption({
+        website: Website.konachan,
+        post: _getPost(Website.konachan, failedUrl),
+        downloadType: DownloadType.file,
+      }),
       savePath: failedSavePath,
-    });
+    } as ValidDownloadOption);
     const failedDownloads = getDownloads();
     expect(
       failedDownloads.length,
@@ -219,11 +227,13 @@ describe("Test download module.", () => {
       "listen-succeed.txt"
     );
     download({
-      website: Website.konachan,
-      post: _getPost(Website.konachan, succeedUrl),
-      downloadType: DownloadType.file,
+      ...new DownloadOption({
+        website: Website.konachan,
+        post: _getPost(Website.konachan, succeedUrl),
+        downloadType: DownloadType.file,
+      }),
       savePath: succeedSavePath,
-    });
+    } as ValidDownloadOption);
     const succeedDownloads = getDownloads();
     expect(
       succeedDownloads.length,
@@ -252,15 +262,17 @@ describe("Test download module.", () => {
     removeDwonloadListen(_listen);
     [awaitUrl, failedUrl, succeedUrl].forEach((url) =>
       download({
-        website: Website.konachan,
-        downloadType: DownloadType.file,
-        post: _getPost(Website.konachan, url),
+        ...new DownloadOption({
+          website: Website.konachan,
+          downloadType: DownloadType.file,
+          post: _getPost(Website.konachan, url),
+        }),
         savePath: resolve(
           __dirname,
           "__temp__",
           `remove-listen-${basename(url)}.txt`
         ),
-      })
+      } as ValidDownloadOption)
     );
     await sleep(2000);
     expect(Object.keys(listen), "Not remove listen").toHaveLength(0);

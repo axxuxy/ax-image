@@ -1,15 +1,14 @@
 import _zhCn from "element-plus/dist/locale/zh-cn.mjs";
 import { Website } from "@/utils/website";
 import { TagType } from "@/utils/api";
-import { Order, RatingMode, RatingValue, TagMode } from "@/utils/format_tags";
 import { DownloadType } from "@/utils/download";
-
-// function addAllValues<T extends { [key: string]: string }>(
-//   values: T & { all?: never },
-//   all: string
-// ): { [key in keyof T | "all"]: string } {
-//   return Object.assign({ all }, values);
-// }
+import {
+  Order,
+  RatingMode,
+  RatingValue,
+  TagMode,
+  type TagType as TagClass,
+} from "@/utils/tags";
 
 const websites = (() => {
   const websites: { [key: string]: string } = {};
@@ -33,22 +32,7 @@ enum DownloadStates {
 
 const downloadPage = {
   title: "下载页面",
-  // filter: {
-  //   search: "搜索",
-  // },
-  // downloadStates: {
-  //   title: "下载状态",
-  //   values: addAllValues<typeof DownloadStates>(DownloadStates, "全部状态"),
-  // },
   downloadStates: DownloadStates,
-  // showWebsite: {
-  //   title: "显示站点",
-  //   // values: addAllValues<typeof websites>(websites, "全部站点"),
-  //   // values:websites,
-  // },
-  // lastDate: {
-  //   title: "下载时间",
-  // },
 };
 
 function settingItem<T extends { title: string }>(item: T): T {
@@ -98,6 +82,118 @@ const postListComponent = {
   loading: "加载中...",
   noMore: "没有更多帖子了...",
   none: "没有符合条件的帖子...",
+};
+
+const downloadType = (() => {
+  const types: { [key: string]: string } = {};
+  Object.values(DownloadType).forEach((_) => {
+    switch (_) {
+      case DownloadType.sample:
+        types[_] = "下载样图";
+        return;
+      case DownloadType.jpeg:
+        types[_] = "下载jpeg";
+        return;
+      case DownloadType.file:
+        types[_] = "下载原图";
+        return;
+      default:
+        throw new Error(`Not have the download type, the type is ${_}.`);
+    }
+  });
+  return <{ [key in DownloadType]: string }>types;
+})();
+
+const postImageComponent = {
+  uploadUser: "上传用户",
+  uploadDate: "上传时间",
+  size: "文件大小",
+  source: "来源地址",
+  rating: "安全等级",
+  score: "评分",
+  downloadType,
+  showParent: "查看父帖子",
+  showChildren: "查看子帖子",
+  getParentError: "获取父帖子异常",
+  addDownload: "添加下载",
+  yetDownload: "已添加下载",
+};
+
+const downloadTypes = (() => {
+  const types: { [key: string]: string } = {};
+  Object.values(DownloadType).forEach((type) => {
+    switch (type) {
+      case DownloadType.sample:
+        types[type] = "样图";
+        return;
+      case DownloadType.jpeg:
+        types[type] = "jpeg";
+        return;
+      case DownloadType.file:
+        types[type] = "原图";
+        return;
+      default:
+        throw new Error(`Undefined the type name, the type is ${type}`);
+    }
+  });
+  return <{ [key in DownloadType]: string }>types;
+})();
+const downloadListComponent = {
+  downloadTypes,
+  deleteAlert: "确定要删除图片吗？",
+  deleteAlertTitle: "删除图片",
+  deleteAlertConfirm: "确定",
+  deletedMessage: "删除成功",
+  deletedDownloadedInofFailed: "删除下载信息失败",
+  deleteAlertCancel: "取消",
+  deleteCancelMessage: "已取消",
+  noDownloading: "这里空空如也...",
+};
+
+const downloadedComponent = {
+  website: {
+    title: "指定站点",
+    values: websites,
+  },
+  date: {
+    title: "下载日期",
+  },
+  none: "这里空空如也...",
+  noneOfUnder: "没有符合条件的帖子图片",
+  loading: "加载中...",
+};
+
+const downloadingComponent = {
+  website: {
+    title: "指定站点",
+    values: websites,
+  },
+  none: "这里空空如也...",
+  noneOfUnder: "没有符合条件的下载项",
+};
+
+const postPage = {
+  loadFailed: "加载失败",
+};
+
+const tagClass: {
+  [key in TagClass | "parentNone"]: string;
+} = {
+  common: "通用标签",
+  user: "上传用户",
+  vote3: "用户收藏",
+  md5: "图片MD5",
+  source: "来源出处",
+  id: "ID",
+  width: "宽度",
+  height: "高度",
+  score: "点赞数",
+  mpixels: "像素级别",
+  date: "时间",
+  rating: "安全级别",
+  order: "帖子排序",
+  parent: "父帖子",
+  parentNone: "排除子帖子",
 };
 
 const tagTypes = (() => {
@@ -206,6 +302,44 @@ const ratings = (() => {
   return <{ [key in RatingValue]: RatingModeText }>ratings;
 })();
 
+const orders = (() => {
+  const orders: { [key: string]: string } = {};
+  Object.values(Order).forEach((order) => {
+    switch (order) {
+      case Order.id:
+        orders[order] = "ID顺序";
+        break;
+      case Order.idDesc:
+        orders[order] = "ID降序";
+        break;
+      case Order.mpixels:
+        orders[order] = "像素倒序";
+        break;
+      case Order.mpixelsAsc:
+        orders[order] = "像素升序";
+        break;
+      case Order.score:
+        orders[order] = "评分倒序";
+        break;
+      case Order.scoreAsc:
+        orders[order] = "评分升序";
+        break;
+      case Order.landscape:
+        orders[order] = "宽比高";
+        break;
+      case Order.portrait:
+        orders[order] = "高比宽";
+        break;
+      case Order.vote:
+        orders[order] = "收藏者排序";
+        break;
+      default:
+        throw new Error(`Undefined the order text, the order is ${order}.`);
+    }
+  });
+  return <{ [key in Order]: string }>orders;
+})();
+
 export interface RangeOrValueText {
   rangeMode: string;
   valueMode: string;
@@ -245,11 +379,11 @@ const rangeOrValue: {
     value: "输入高度",
   },
   score: {
-    rangeMode: "评分范围",
-    valueMode: "指定评分",
-    min: "最小评分",
-    max: "最大评分",
-    value: "输入评分",
+    rangeMode: "点赞数范围",
+    valueMode: "指定点赞数",
+    min: "最小点赞数",
+    max: "最大点赞数",
+    value: "输入点赞数",
   },
   mpixels: {
     rangeMode: "像素范围",
@@ -267,153 +401,21 @@ const rangeOrValue: {
   },
 };
 
-const orders = (() => {
-  const orders: { [key: string]: string } = {};
-  Object.values(Order).forEach((order) => {
-    switch (order) {
-      case Order.id:
-        orders[order] = "ID顺序";
-        break;
-      case Order.idDesc:
-        orders[order] = "ID降序";
-        break;
-      case Order.mpixels:
-        orders[order] = "像素倒序";
-        break;
-      case Order.mpixelsAsc:
-        orders[order] = "像素升序";
-        break;
-      case Order.score:
-        orders[order] = "评分倒序";
-        break;
-      case Order.scoreAsc:
-        orders[order] = "评分升序";
-        break;
-      case Order.landscape:
-        orders[order] = "宽比高";
-        break;
-      case Order.portrait:
-        orders[order] = "高比宽";
-        break;
-      case Order.vote:
-        orders[order] = "收藏者排序";
-        break;
-      default:
-        throw new Error(`Undefined the order text, the order is ${order}.`);
-    }
-  });
-  return <{ [key in Order]: string }>orders;
-})();
-
-const filterTagComponent = {
-  none: "没有符合条件的标签...",
-  tagTypes,
+const tagComponent = {
   addTag: "添加标签",
-  tagModes,
-  rating: {
-    title: "安全级别",
-    values: ratings,
+  tagTypes: tagClass,
+  tag: {
+    types: tagTypes,
+    modes: tagModes,
   },
-  userInput: "上传者",
-  vote3Input: "收藏者",
-  md5Input: "帖子md5",
-  sourceInput: "来源出处",
+  ratings,
+  orders,
   rangeOrValue,
-  order: {
-    title: "帖子排序",
-    values: orders,
-  },
-  parent: "指定父帖子",
-  parentInput: "输入ID",
-  parentNone: "过滤子节点",
 };
 
-const downloadType = (() => {
-  const types: { [key: string]: string } = {};
-  Object.values(DownloadType).forEach((_) => {
-    switch (_) {
-      case DownloadType.sample:
-        types[_] = "下载样图";
-        return;
-      case DownloadType.jpeg:
-        types[_] = "下载jpeg";
-        return;
-      case DownloadType.file:
-        types[_] = "下载原图";
-        return;
-      default:
-        throw new Error(`Not have the download type, the type is ${_}.`);
-    }
-  });
-  return <{ [key in DownloadType]: string }>types;
-})();
-
-const postImageComponent = {
-  uploadUser: "上传用户",
-  uploadDate: "上传时间",
-  size: "文件大小",
-  source: "来源地址",
-  rating: "安全等级",
-  score: "评分",
-  downloadType,
-  showParent: "查看父帖子",
-  showChildren: "查看子帖子",
-  getParentError: "获取父帖子异常",
-  addDownload: "添加下载",
-  yetDownload: "已添加下载",
-};
-
-const downloadTypes = (() => {
-  const types: { [key: string]: string } = {};
-  Object.values(DownloadType).forEach((type) => {
-    switch (type) {
-      case DownloadType.sample:
-        types[type] = "样图";
-        return;
-      case DownloadType.jpeg:
-        types[type] = "jpeg";
-        return;
-      case DownloadType.file:
-        types[type] = "原图";
-        return;
-      default:
-        throw new Error(`Undefined the type name, the type is ${type}`);
-    }
-  });
-  return <{ [key in DownloadType]: string }>types;
-})();
-const downloadListComponent = {
-  downloadTypes,
-  deleteAlert: "确定要删除图片吗？",
-  deleteAlertTitle: "删除图片",
-  deleteAlertConfirm: "确定",
-  deletedMessage: "删除成功",
-  deletedDownloadedInofFailed: "删除下载信息失败",
-  deleteAlertCancel: "取消",
-  deleteCancelMessage: "已取消",
-  noDownloading: "这里空空如也...",
-};
-
-const downloadedComponent = {
-  website: {
-    title: "指定站点",
-    values: websites,
-  },
-  date: {
-    title: "下载日期",
-  },
-  none: "这里空空如也...",
-  noneOfUnder: "没有符合条件的帖子图片",
-  loading: "加载中...",
-};
-
-const downloadingComponent = {
-  website: {
-    title: "指定站点",
-    values: websites,
-  },
-  none: "这里空空如也...",
-  noneOfUnder: "没有符合条件的下载项",
+const searchPage = {
+  index: "首页",
+  search: "搜索",
 };
 
 const zhCn = {
@@ -422,12 +424,14 @@ const zhCn = {
   downloadPage,
   settingsPage,
   homePage,
+  postPage,
+  searchPage,
   postListComponent,
-  filterTagComponent,
   postImageComponent,
   downloadListComponent,
   downloadedComponent,
   downloadingComponent,
+  tagComponent,
 };
 
 export const i18n: {

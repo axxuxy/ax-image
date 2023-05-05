@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import { configs as _configs, type Config } from "@/utils/website";
-import { computed, nextTick, onUnmounted, ref, watch } from "vue";
+import {
+  computed,
+  inject,
+  onActivated,
+  onUnmounted,
+  ref,
+  shallowRef,
+  watch,
+} from "vue";
 import { useLanguage } from "@/stores/language";
 import { storeToRefs } from "pinia";
-import TagFilter from "@/components/TagFilter.vue";
-import PostList from "@/components/PostList.vue";
-import { formatTags, restoreTags, type TagsOptions } from "@/utils/format_tags";
-import type { Tag } from "@/components/tools/AddTagItem.vue";
-import { useRoute, useRouter } from "vue-router";
+import PostList from "@/components/posts/PostList.vue";
+import { onBeforeRouteLeave, useRouter } from "vue-router";
 import {
   addDwonloadListen,
   getDownloads,
   removeDwonloadListen,
 } from "@/utils/download";
-import { useConfig } from "@/stores/config";
+import { type Post, getPostsApi } from "@/utils/api";
+import { useCache } from "@/stores/cache";
+import { downloadPageKeepAliveKey } from "@/inject";
+import type { ElMain } from "element-plus";
+import { IdTag } from "@/utils/tags";
 
 const { language } = storeToRefs(useLanguage());
 const configs = computed(() =>
@@ -33,38 +42,10 @@ const config = ref(
 );
 watch(config, (_) => {
   localStorage.setItem("website", _.website);
+  update();
 });
 function websiteCommand(_: Config & { name: string }) {
   config.value = _;
-}
-
-const showFilter = ref(false);
-
-const tagOptions = ref<TagsOptions>({});
-
-const tags = computed(() => formatTags(tagOptions.value)?.split(" ")?.sort());
-const postsKey = computed(() =>
-  [config.value.website, ...(tags.value ?? [])].join(" ")
-);
-const posts = ref<InstanceType<typeof PostList>>();
-const update = ref(false);
-watch(update, async (value) => {
-  if (value)
-    await posts.value?.update()?.finally(() => {
-      update.value = false;
-    });
-});
-
-function search(_: TagsOptions) {
-  showFilter.value = false;
-  tagOptions.value = _;
-}
-
-function openChildren(id: number) {
-  tagOptions.value = { parent: id };
-}
-function openTag(tag: Tag) {
-  tagOptions.value = { tags: [tag] };
 }
 
 const router = useRouter();
@@ -79,85 +60,112 @@ addDwonloadListen(updateDownloadingCount);
 onUnmounted(() => removeDwonloadListen(updateDownloadingCount));
 updateDownloadingCount();
 
-function removeTag(tag: string) {
-  tagOptions.value = restoreTags(
-    tags.value!.filter((_) => _ !== tag).join(" ")
-  );
+const posts = shallowRef<Array<Post>>([]);
+
+const isGettingPosts = ref(false);
+const isGettingPostsFailed = ref(false);
+const noMore = ref(false);
+let abortController: AbortController | undefined;
+async function getPosts() {
+  if (isGettingPosts.value || noMore.value || isGettingPostsFailed.value) return;
+  isGettingPosts.value = true;
+  try {
+    abortController?.abort();
+    abortController = new AbortController();
+    const _ = await getPostsApi(
+      config.value.website,
+      posts.value.length
+        ? {
+            tags: [
+              new IdTag({
+                max: posts.value[posts.value.length - 1]!.id - 1,
+              }),
+            ],
+          }
+        : undefined,
+      abortController.signal
+    );
+    if (_.length < 100) noMore.value = true;
+    posts.value.push(..._);
+    useCache().addPosts(config.value.website, _);
+  } 
+  catch(error){
+    isGettingPostsFailed.value = true;
+    throw error;
+  }
+  finally {
+    isGettingPosts.value = false;
+  }
 }
 
-const route = useRoute();
-watch([config, tags], () => {
+function update() {
+  isGettingPostsFailed.value = false;
+  noMore.value = false;
+  isGettingPosts.value = false;
+  posts.value = [];
+  getPosts();
+}
+
+function failedGetPosts() {
+  isGettingPostsFailed.value = false;
+  getPosts();
+}
+
+function noMoreGetPosts() {
+  noMore.value = false;
+  getPosts();
+}
+
+function openPost(post: Post) {
   router.push({
-    name: "home",
+    name: "post",
+    params: {
+      id: post.id,
+    },
     query: {
-      tags: tags.value?.join(" "),
       website: config.value.website,
     },
   });
-});
-watch(
-  route,
-  (value) => {
-    if (value.name === "home" && value.query.tags !== tags.value) {
-      const _ = configs.value.find(
-        (config) => config.website === value.query.website
-      );
-      if (_) config.value = _;
-      // const tags = value.query.tags as string;
-      // tagOptions.value = restoreTags(tags);
-    }
-  },
-  {
-    immediate: true,
-  }
-);
+}
 
-const { rating } = storeToRefs(useConfig());
-watch(rating, () => {
-  nextTick(() => {
-    posts.value?.update();
+function toSearch() {
+  router.push({
+    name: "search",
+    query: {
+      website: config.value.website,
+    },
   });
+}
+
+const keep = inject(downloadPageKeepAliveKey)!;
+onBeforeRouteLeave((to, form, next) => {
+  if (to.name === "download") keep(false);
+  next();
+});
+
+const scrollbar = ref<InstanceType<typeof ElMain>>();
+let scrollTop = 0;
+onActivated(() => {
+  (scrollbar.value!.$el as HTMLElement).scroll({ top: scrollTop });
+});
+onBeforeRouteLeave(() => {
+  scrollTop = (scrollbar.value!.$el as HTMLElement).scrollTop;
 });
 </script>
 
 <template>
   <ElContainer class="container">
-    <ElDrawer
-      v-model="showFilter"
-      direction="ttb"
-      :with-header="false"
-      size="auto"
-      style="max-height: 100%"
-    >
-      <TagFilter
-        class="filter"
-        v-model="tagOptions"
-        :website="config.website"
-        @close="showFilter = false"
-        @search="search"
-      />
-    </ElDrawer>
     <ElHeader height="auto">
-      <ElPageHeader :class="{ 'filter-is-hidden': !showFilter }">
+      <ElPageHeader>
         <template #title>
-          <RouterLink to="/">
-            <h1>AX-image</h1>
-          </RouterLink>
+          <h1>AX-image</h1>
         </template>
         <template #extra>
-          <div class="tags-box" v-if="tags">
-            <ElScrollbar>
-              <div class="tags">
-                <ElTag
-                  v-for="tag in tags"
-                  :key="tag"
-                  closable
-                  @close="removeTag(tag)"
-                  >{{ tag }}</ElTag
-                >
-              </div>
-            </ElScrollbar>
-          </div>
+          <ElButton circle @click="toSearch">
+            <ElIcon>
+              <i-ep-search />
+            </ElIcon>
+          </ElButton>
           <ElDropdown split-button @command="websiteCommand">
             <span>{{ config.name }}</span>
             <template #dropdown>
@@ -171,40 +179,90 @@ watch(rating, () => {
               </ElDropdownMenu>
             </template>
           </ElDropdown>
-          <ElButton @click="showFilter = true" circle>
-            <ElIcon>
-              <i-ep-search />
-            </ElIcon>
-          </ElButton>
-          <ElButton @click="update = true" :disabled="update" circle>
+          <ElButton @click="update" :disabled="isGettingPosts" circle>
             <ElIcon>
               <i-ep-refresh-left />
             </ElIcon>
           </ElButton>
 
           <ElBadge :value="downloadCount" :hidden="!downloadCount">
-            <ElButton @click="router.push('/download')" circle link>
+            <ElButton
+              @click="
+                router.push({
+                  name: 'download',
+                })
+              "
+              circle
+              link
+            >
               <ElIcon>
                 <i-ep-download />
               </ElIcon>
             </ElButton>
           </ElBadge>
-          <ElButton @click="router.push('/setting')" circle link>
+          <ElButton
+            @click="
+              router.push({
+                name: 'setting',
+              })
+            "
+            circle
+            link
+          >
             <i-ep-setting />
           </ElButton>
         </template>
       </ElPageHeader>
     </ElHeader>
-    <ElMain>
+    <ElMain class="scrollbar" ref="scrollbar">
       <PostList
-        :website="config.website"
-        :tag-options="tagOptions"
-        :key="postsKey"
-        ref="posts"
-        @open-children="openChildren"
-        @open-tag="openTag"
+        :class="{
+          'has-post': posts.length,
+        }"
+        :posts="posts"
+        v-infinite-scroll="getPosts"
+        :infinite-scroll-disabled="isGettingPosts || noMore"
+        @click-post="openPost"
       >
       </PostList>
+      <ElAlert v-if="isGettingPosts" class="loading" :closable="false" center>
+        <span>{{ language.postListComponent.loading }}</span>
+        <ElIcon class="is-loading">
+          <i-ep-loading />
+        </ElIcon>
+      </ElAlert>
+      <ElAlert
+        v-else-if="isGettingPostsFailed"
+        type="error"
+        center
+        :closable="false"
+      >
+        <ElSpace alignment="center">
+          <span>{{ language.postListComponent.loadingFailed }}</span>
+          <ElButton
+            @click="failedGetPosts"
+            color="var(--el-color-error)"
+            text
+            plain
+          >
+            <ElIcon>
+              <i-ep-refresh />
+            </ElIcon>
+          </ElButton>
+        </ElSpace>
+      </ElAlert>
+      <ElAlert v-else-if="noMore" center type="info" :closable="false">
+        <span>{{
+          posts.length
+            ? language.postListComponent.noMore
+            : language.postListComponent.none
+        }}</span>
+        <ElButton @click="noMoreGetPosts" text plain>
+          <ElIcon>
+            <i-ep-refresh />
+          </ElIcon>
+        </ElButton>
+      </ElAlert>
     </ElMain>
   </ElContainer>
 </template>
@@ -216,22 +274,16 @@ watch(rating, () => {
   header {
     position: sticky;
     top: 0;
-    // display: flex;
     min-height: 60px;
-    // align-items: center;
     border-bottom: 1px solid var(--el-border-color);
     background-color: #fff;
     z-index: 10;
 
     .el-page-header {
-      // display: flex;
-      // align-items: center;
       width: 100%;
-      // min-height: 100%;
       height: 100%;
 
       :deep(.el-page-header__header) {
-        // min-height: 100%;
         height: 100%;
 
         .el-page-header__left {
@@ -254,7 +306,6 @@ watch(rating, () => {
           justify-content: end;
           align-items: center;
           overflow: hidden;
-          // white-space: nowrap;
 
           & > div,
           & > button {
@@ -262,12 +313,7 @@ watch(rating, () => {
             flex-shrink: 0;
           }
 
-          // &>*:nth-child(1) {
-          //   margin-left: 0;
-          // }
-
           .tags-box {
-            // display: inline-block;
             overflow: auto;
             flex: 1;
             display: flex;
@@ -278,9 +324,6 @@ watch(rating, () => {
               display: flex;
               grid-gap: 12px;
               padding: 8px 0;
-              // justify-content: end;
-              // overflow: hidden;
-              // flex: 1;
             }
           }
         }
@@ -301,7 +344,18 @@ watch(rating, () => {
 
   main {
     height: 100%;
-    padding: 0;
+    padding: 8px;
+    display: block;
+
+    .has-post + .el-alert {
+      margin-top: 8px;
+    }
+
+    .loading {
+      .is-loading {
+        margin-left: 8px;
+      }
+    }
   }
 }
 </style>

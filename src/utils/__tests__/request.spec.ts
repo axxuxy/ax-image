@@ -181,6 +181,8 @@ describe.concurrent("Test request module.", () => {
     }
   );
 
-  /// The test request proxy need todo.
+  /**
+   * The test request proxy need todo.
+   */
   it.todo("Test request module set proxy.");
 });

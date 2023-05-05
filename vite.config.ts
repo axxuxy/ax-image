@@ -12,7 +12,6 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { main } from "./package.json";
-import svgLoader from "vite-svg-loader";
 import Icons from "unplugin-icons/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import ElementPlus from "unplugin-element-plus/vite";
@@ -30,7 +29,6 @@ export default defineConfig(({ mode }) => {
   const plugins: PluginOption = [
     vue(),
     vueJsx(),
-    svgLoader(),
     onService((url) => (process.env.DEV_URL = url)),
     mainElectron({
       output: dirname(resolve(main)),

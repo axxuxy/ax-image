@@ -2,9 +2,11 @@ import Request from "@/utils/request";
 import http from "http";
 import https from "https";
 
-/// Rquest module import http or https request use named import.
-/// But msw only mock module request property.
-/// So in the need use module request property replace named import method.
+/**
+ * Rquest module import http or https request use named import.
+ * But msw only mock module request property.
+ * So in the need use module request property replace named import method.
+ */
 Request.prototype["request"] = function (signal: AbortSignal) {
   switch (this.urlPass.protocol) {
     case "http:":
