@@ -26,8 +26,7 @@ function getDownloadeds(count: number, website?: Website): DownloadedInfoList {
 }
 
 async function saveDwonloadeds(downloadeds: DownloadedInfoList) {
-  for (const downloaded of downloadeds)
-    await downloadedDB.save(downloaded);
+  for (const downloaded of downloadeds) await downloadedDB.save(downloaded);
 }
 
 const websites = Object.values(Website);
@@ -64,9 +63,7 @@ describe("Test downloaded info db module.", async () => {
 
   it("Test whethen can save downloaded data and clear saved downloaded data.", async () => {
     await saveDwonloadeds(getDownloadeds(10));
-    await expect(downloadedDB.query()).resolves.not.toEqual(
-      []
-    );
+    await expect(downloadedDB.query()).resolves.not.toEqual([]);
 
     await downloadedDB.clear();
     await expect(downloadedDB.query()).resolves.toEqual([]);
