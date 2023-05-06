@@ -5,6 +5,7 @@ import {
   Tag as FormatTag,
   RatingValue,
   type Rating,
+  TagType as TagClass,
 } from "@/utils/tags";
 
 let rating: Rating | undefined;
@@ -83,7 +84,7 @@ export function getPostsApi(
   url.pathname = "post.json";
 
   const tags = option.tags ?? [];
-  if (rating && tags.every((_) => !(_ instanceof RatingTag)))
+  if (rating && tags.every((_) => _.type !== TagClass.rating))
     tags.push(new RatingTag(rating));
   if (tags.length)
     url.searchParams.set("tags", tags.map((_) => _.tag).join(" "));

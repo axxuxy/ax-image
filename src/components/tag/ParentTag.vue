@@ -41,6 +41,7 @@ function closeEdit() {
     v-else
     type="meta"
     :tag="tag"
+    :hide-edit="isNaN(tag.id)"
     @edit="isEdit = true"
     @remove="emit('remove')"
   />
