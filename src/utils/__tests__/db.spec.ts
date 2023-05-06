@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import "fake-indexeddb/auto";
-import { db } from "@/utils/db";
+import { downloadedDB } from "@/utils/db";
 import { getDownloaded } from "@/utils/__tools__/db";
 import type { DownloadedInfo } from "@/utils/download";
 import { Website } from "@/utils/website";
@@ -26,7 +26,8 @@ function getDownloadeds(count: number, website?: Website): DownloadedInfoList {
 }
 
 async function saveDwonloadeds(downloadeds: DownloadedInfoList) {
-  for (const downloaded of downloadeds) await db.saveDownloadedInfo(downloaded);
+  for (const downloaded of downloadeds)
+    await downloadedDB.save(downloaded);
 }
 
 const websites = Object.values(Website);
@@ -46,26 +47,29 @@ function orderDwonloadedByDownloadedAt(
  * The test of the describe cannot concurrent run.
  * Because saved data in db module will affect other test of db module.
  */
-describe("Test db module.", async () => {
+describe("Test downloaded info db module.", async () => {
   beforeEach(async () => {
-    await db.clear();
-    const data = await db.queryDownloadedInfos();
-    if (data.length) throw new Error("Test db module has data is not clear.");
+    await downloadedDB.clear();
+    const data = await downloadedDB.query();
+    if (data.length)
+      throw new Error("Test db module has data is not clear downloaded info.");
   });
 
   it("Test has save data.", async () => {
     await expect(
-      db.queryDownloadedInfos(),
+      downloadedDB.query(),
       "Saved data count not's 0."
     ).resolves.toEqual([]);
   });
 
-  it("Test whethen can save data and clear save data.", async () => {
+  it("Test whethen can save downloaded data and clear saved downloaded data.", async () => {
     await saveDwonloadeds(getDownloadeds(10));
-    await expect(db.queryDownloadedInfos()).resolves.not.toEqual([]);
+    await expect(downloadedDB.query()).resolves.not.toEqual(
+      []
+    );
 
-    await db.clear();
-    await expect(db.queryDownloadedInfos()).resolves.toEqual([]);
+    await downloadedDB.clear();
+    await expect(downloadedDB.query()).resolves.toEqual([]);
   });
 
   it("Test query data is order whethen by downloaded time.", async () => {
@@ -83,7 +87,7 @@ describe("Test db module.", async () => {
     }));
     await saveDwonloadeds(data.flatMap((website) => website.data));
     await expect(
-      db.queryDownloadedInfos({ limit: data.length * 15 }),
+      downloadedDB.query({ limit: data.length * 15 }),
       "Query all data prior downloaded time less to that downloaded time."
     ).resolves.toSatisfy((data) =>
       compareTimeLessPriorTime(<DownloadedInfoList>data)
@@ -92,7 +96,7 @@ describe("Test db module.", async () => {
     const last =
       data[Math.floor(Math.random() * data.length)].data[0].downloaded_at;
     await expect(
-      db.queryDownloadedInfos({ limit: data.length * 15, last }),
+      downloadedDB.query({ limit: data.length * 15, last }),
       "Set last argument query data prior downloaded time less to that downloaded time."
     ).resolves.toSatisfy((data) =>
       compareTimeLessPriorTime(<DownloadedInfoList>data)
@@ -100,7 +104,7 @@ describe("Test db module.", async () => {
 
     for (const website of data) {
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           website: website.website,
           limit: website.data.length + 1,
         }),
@@ -111,7 +115,7 @@ describe("Test db module.", async () => {
 
       const last = website.data[5].downloaded_at;
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           website: website.website,
           limit: website.data.length + 1,
           last,
@@ -128,7 +132,7 @@ describe("Test db module.", async () => {
     await saveDwonloadeds(data);
     orderDwonloadedByDownloadedAt(data);
     await expect(
-      db.queryDownloadedInfos({ limit: data.length + 1 }),
+      downloadedDB.query({ limit: data.length + 1 }),
       "Save data is unequal to query data."
     ).resolves.toEqual(data);
   });
@@ -137,7 +141,7 @@ describe("Test db module.", async () => {
     const data = getDownloadeds(20);
     await saveDwonloadeds(data);
     await expect(
-      db.queryDownloadedInfos({
+      downloadedDB.query({
         limit: data.length - 1,
       }),
       "Query saved data count unequal to limit."
@@ -160,7 +164,7 @@ describe("Test db module.", async () => {
 
     for (const website of data) {
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           limit: website.data.length + 1,
           website: website.website,
         }),
@@ -169,7 +173,7 @@ describe("Test db module.", async () => {
 
       const limit = website.data.length - 1;
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           limit,
           website: website.website,
         }),
@@ -184,7 +188,7 @@ describe("Test db module.", async () => {
     orderDwonloadedByDownloadedAt(data);
     const first = new Date(data[7].downloaded_at);
     await expect(
-      db.queryDownloadedInfos({ first }),
+      downloadedDB.query({ first }),
       "Query data have downloaded date less to first"
     ).resolves.toSatisfy((data) =>
       (data as DownloadedInfoList).every(
@@ -193,12 +197,12 @@ describe("Test db module.", async () => {
     );
 
     await expect(
-      db.queryDownloadedInfos({ first, limit: 5 }),
+      downloadedDB.query({ first, limit: 5 }),
       "Limit query data count unequal to set limit argument in set first date."
     ).resolves.toHaveLength(5);
 
     await expect(
-      db.queryDownloadedInfos({ first, limit: 100 }),
+      downloadedDB.query({ first, limit: 100 }),
       "Query data last item downloaded date unequal to first date."
     ).resolves.toSatisfy(
       (data) =>
@@ -208,7 +212,7 @@ describe("Test db module.", async () => {
 
     const last = new Date(data[10].downloaded_at);
     await expect(
-      db.queryDownloadedInfos({ last }),
+      downloadedDB.query({ last }),
       "Query data have downloaded date of grearth to last."
     ).resolves.toSatisfy((data) =>
       (<DownloadedInfoList>data).every(
@@ -217,12 +221,12 @@ describe("Test db module.", async () => {
     );
 
     await expect(
-      db.queryDownloadedInfos({ last, limit: 5 }),
+      downloadedDB.query({ last, limit: 5 }),
       "Limit query data count unequal to set limit argument in set last date."
     ).resolves.toHaveLength(5);
 
     await expect(
-      db.queryDownloadedInfos({ first, last, limit: 100 }),
+      downloadedDB.query({ first, last, limit: 100 }),
       "Query data have dwonloaded date less to first or greater to last."
     ).resolves.toSatisfy((data) =>
       (<DownloadedInfoList>data).every(
@@ -250,7 +254,7 @@ describe("Test db module.", async () => {
     for (const website of data) {
       const first = website.data[8].downloaded_at;
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           website: website.website,
           first,
         }),
@@ -264,12 +268,16 @@ describe("Test db module.", async () => {
       );
 
       await expect(
-        db.queryDownloadedInfos({ first, website: website.website, limit: 5 }),
+        downloadedDB.query({
+          first,
+          website: website.website,
+          limit: 5,
+        }),
         "In set first and website argument after limit query data count unequal to set limit argument."
       ).resolves.toHaveLength(5);
 
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           website: website.website,
           first,
           limit: 100,
@@ -283,7 +291,7 @@ describe("Test db module.", async () => {
 
       const last = website.data[1].downloaded_at;
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           website: website.website,
           last,
         }),
@@ -297,12 +305,16 @@ describe("Test db module.", async () => {
       );
 
       await expect(
-        db.queryDownloadedInfos({ last, website: website.website, limit: 5 }),
+        downloadedDB.query({
+          last,
+          website: website.website,
+          limit: 5,
+        }),
         "In set last and website argument after limit query data count unequal to set limit argument in set last date."
       ).resolves.toHaveLength(5);
 
       await expect(
-        db.queryDownloadedInfos({
+        downloadedDB.query({
           first,
           last,
           limit: 100,
@@ -325,9 +337,9 @@ describe("Test db module.", async () => {
     await saveDwonloadeds(data);
     const has = data[0];
     orderDwonloadedByDownloadedAt(data);
-    await db.saveDownloadedInfo(has);
+    await downloadedDB.save(has);
     await expect(
-      db.queryDownloadedInfos({ limit: data.length + 1 }),
+      downloadedDB.query({ limit: data.length + 1 }),
       "Save saved data, saved data has update."
     ).resolves.toEqual(data);
     const now = new Date();
@@ -335,10 +347,10 @@ describe("Test db module.", async () => {
     has.download_at = new Date(
       now.getTime() - Math.floor(Math.random() * 60) - 60
     );
-    await db.saveDownloadedInfo(has);
+    await downloadedDB.save(has);
     orderDwonloadedByDownloadedAt(data);
     await expect(
-      db.queryDownloadedInfos({ limit: data.length + 1 }),
+      downloadedDB.query({ limit: data.length + 1 }),
       "Update saved data, saved data not update."
     ).resolves.toEqual(data);
   });
@@ -349,7 +361,7 @@ describe("Test db module.", async () => {
 
     const randomHasDwonloaded = data[Math.floor(data.length * Math.random())];
     await expect(
-      db.queryDownloadedInfo({
+      downloadedDB.queryItem({
         website: randomHasDwonloaded.website,
         downloadType: randomHasDwonloaded.download_type,
         id: randomHasDwonloaded.id,
@@ -379,7 +391,7 @@ describe("Test db module.", async () => {
       not.id++;
     }
     await expect(
-      db.queryDownloadedInfo(not),
+      downloadedDB.queryItem(not),
       "Find not saved data."
     ).resolves.toBeUndefined();
   });

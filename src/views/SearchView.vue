@@ -4,7 +4,7 @@ import TagComponent from "@/components/tag/TagComponent.vue";
 import { useCache } from "@/stores/cache";
 import { useLanguage } from "@/stores/language";
 import { getPostsApi, getTagsApi, type Post } from "@/utils/api";
-import { CommonTag, ParentNoneTag, ParentTag, Tag } from "@/utils/tags";
+import { Tag, TagType } from "@/utils/tags";
 import type { Website } from "@/utils/website";
 import { computed, onActivated, ref, shallowRef } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
@@ -37,7 +37,7 @@ const tagList = computed(() =>
     tag,
     key: tag.tag,
     type:
-      tag instanceof CommonTag
+      tag.type === TagType.common
         ? cache.tags.get(props.website)?.get(tag.value)?.type
         : undefined,
   }))
@@ -101,7 +101,7 @@ async function getPosts() {
       let needPushIdTag = true;
       for (let index = _tags.length - 1; index < _tags.length; index++) {
         const tag = _tags[index];
-        if (tag instanceof IdTag) {
+        if (tag.type === TagType.id) {
           if (typeof tag.value === "number") {
             console.warn(`Has tag set post id,don't need to load it anymore.`);
             return;
@@ -181,13 +181,9 @@ onBeforeRouteLeave(() => {
 
 function addTag(tag: Tag) {
   const _: Array<Tag> = tags.value
-    ? tag instanceof CommonTag
-      ? tags.value
-      : tag instanceof ParentNoneTag
-      ? tags.value.filter(
-          (_) => !(_ instanceof ParentTag || _ instanceof ParentNoneTag)
-        )
-      : tags.value.filter((_) => !(_ instanceof tag.constructor))
+    ? tag.type === TagType.common
+      ? tags.value.filter((_) => _.type !== TagType.common || _.tag !== tag.tag)
+      : tags.value.filter((_) => _.type !== tag.type)
     : [];
   _.push(tag);
   toSearch(props.website, _);

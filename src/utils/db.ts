@@ -14,21 +14,21 @@ class DownloadDexie extends Dexie {
     this.open();
   }
 
-  async saveDownloadedInfo(downloaded: DownloadedInfo): Promise<void> {
-    await this.downloaded.put(downloaded);
+  async save(downloaded: DownloadedInfo) {
+    return await this.downloaded.put(downloaded);
   }
 
-  queryDownloadedInfos({
+  async query({
     website,
+    first,
     last,
     limit = 5,
-    first,
   }: {
     website?: Website;
     first?: Date;
     last?: Date;
     limit?: number;
-  } = {}): Promise<DownloadedInfo[]> {
+  } = {}) {
     let collection = this.downloaded.orderBy("downloaded_at").reverse();
 
     if (website)
@@ -44,10 +44,10 @@ class DownloadDexie extends Dexie {
         (item: DownloadedInfo) => item.downloaded_at >= first
       );
 
-    return collection.limit(limit).toArray();
+    return await collection.limit(limit).toArray();
   }
 
-  queryDownloadedInfo({
+  async queryItem({
     website,
     id,
     downloadType,
@@ -56,7 +56,7 @@ class DownloadDexie extends Dexie {
     id: number;
     downloadType: DownloadType;
   }): Promise<DownloadedInfo | undefined> {
-    return this.downloaded
+    return await this.downloaded
       .where({
         website: website,
         id,
@@ -65,7 +65,7 @@ class DownloadDexie extends Dexie {
       .first();
   }
 
-  deleteDownloaded({
+  async deleteItem({
     website,
     downloadType,
     id,
@@ -74,7 +74,7 @@ class DownloadDexie extends Dexie {
     downloadType: DownloadType;
     id: number;
   }) {
-    return this.downloaded
+    return await this.downloaded
       .where({
         website,
         download_type: downloadType,
@@ -88,4 +88,59 @@ class DownloadDexie extends Dexie {
   }
 }
 
-export const db = new DownloadDexie();
+export const downloadedDB = new DownloadDexie();
+
+interface SearchHistoryInfo {
+  website: Website;
+  tags: Array<string>;
+  date: Date;
+}
+
+export interface SearchHistoryItem extends SearchHistoryInfo {
+  key: string;
+}
+
+class SearchHistoryDexie extends Dexie {
+  private searchHistory!: Table<SearchHistoryItem>;
+  constructor() {
+    super("search history");
+    this.version(1).stores({
+      searchHistory: "key,date",
+    });
+  }
+
+  async save(info: SearchHistoryInfo) {
+    return await this.searchHistory.put({
+      key: `${info.website} - ${info.tags.sort().join(" ")}`,
+      ...info,
+    });
+  }
+
+  async query({
+    website,
+    first,
+    last,
+    limit,
+  }: { website?: Website; first?: Date; last?: Date; limit?: number } = {}) {
+    let collection = this.searchHistory.orderBy("date").reverse();
+
+    if (website)
+      collection = collection.filter((item) => item.website === website);
+
+    if (last) collection = collection.filter((item) => item.date < last);
+
+    if (first) collection = collection.filter((item) => item.date >= first);
+
+    return collection.limit(limit ?? 5).toArray();
+  }
+
+  async deleteItem(key: string) {
+    return this.searchHistory.where({ key }).delete();
+  }
+
+  async clear() {
+    return await this.searchHistory.clear();
+  }
+}
+
+export const searchHistoryDB = new SearchHistoryDexie();

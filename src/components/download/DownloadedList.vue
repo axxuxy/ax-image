@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { db } from "@/utils/db";
+import { downloadedDB } from "@/utils/db";
 import type { DownloadedInfo } from "@/utils/download";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { existsSync, rmSync } from "fs";
@@ -26,8 +26,8 @@ function loadDownloaded(limit = 10) {
     downloadeds.value[downloadeds.value.length - 1]?.downloaded_at ||
     (date.value ? new Date(date.value!.getTime() + 86400000) : undefined);
 
-  return db
-    .queryDownloadedInfos({
+  return downloadedDB
+    .query({
       first,
       last,
       limit,
@@ -50,7 +50,7 @@ function loadDownloaded(limit = 10) {
 }
 
 async function deleteDownloadedInfo(downloaded: DownloadedInfo) {
-  await db.deleteDownloaded({
+  await downloadedDB.deleteItem({
     website: downloaded.website,
     downloadType: downloaded.download_type,
     id: downloaded.id,

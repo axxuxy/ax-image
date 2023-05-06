@@ -24,7 +24,7 @@ import {
 } from "@/utils/download";
 import type { Post } from "@/utils/api";
 import type { Website } from "@/utils/website";
-import { db } from "@/utils/db";
+import { downloadedDB } from "@/utils/db";
 
 addErrorEventListener((errorInfo) => {
   console.error(errorInfo);
@@ -97,5 +97,5 @@ window.addEventListener("unload", () => {
 
 addDwonloadListen((download, event) => {
   if (event === DownloadEvent.succeed)
-    db.saveDownloadedInfo(download.getDownloadedInfo());
+    downloadedDB.save(download.getDownloadedInfo());
 });
