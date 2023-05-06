@@ -90,7 +90,7 @@ class DownloadDexie extends Dexie {
 
 export const downloadedDB = new DownloadDexie();
 
-interface SearchHistoryInfo {
+export interface SearchHistoryInfo {
   website: Website;
   tags: Array<string>;
   date: Date;
