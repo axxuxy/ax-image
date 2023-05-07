@@ -6,6 +6,7 @@ import { computed } from "vue";
 const props = defineProps<{
   tag: Tag;
   hideEdit?: boolean;
+  hideRemove?: boolean;
   type?: TagType | "meta";
 }>();
 
@@ -20,7 +21,7 @@ const type = computed(() =>
 </script>
 
 <template>
-  <ElTag :class="type" closable @close="emit('remove')">
+  <ElTag :class="type" :closable="!hideRemove" @close="emit('remove')">
     <ElIcon class="edit" v-if="!hideEdit" @click="emit('edit')">
       <i-ep-edit />
     </ElIcon>

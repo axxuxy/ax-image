@@ -155,10 +155,11 @@ function openPost(download: DownloadItem) {
   <div class="box scrollbar">
     <div class="tools-box">
       <div class="tools">
-        <ElSelect v-model="website" clearable>
-          <template #prefix>
-            <span>{{ language.downloadingComponent.website.title }}:</span>
-          </template>
+        <ElSelect
+          v-model="website"
+          clearable
+          :placeholder="language.downloadingComponent.website.title"
+        >
           <ElOption
             v-for="website in websites"
             :key="website.website"

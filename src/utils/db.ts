@@ -121,7 +121,14 @@ class SearchHistoryDexie extends Dexie {
     first,
     last,
     limit,
-  }: { website?: Website; first?: Date; last?: Date; limit?: number } = {}) {
+    search, /// TODO Test the argument.
+  }: {
+    website?: Website;
+    first?: Date;
+    last?: Date;
+    limit?: number;
+    search?: Array<string>;
+  } = {}) {
     let collection = this.searchHistory.orderBy("date").reverse();
 
     if (website)
@@ -130,6 +137,11 @@ class SearchHistoryDexie extends Dexie {
     if (last) collection = collection.filter((item) => item.date < last);
 
     if (first) collection = collection.filter((item) => item.date >= first);
+
+    if (search && search.length)
+      collection = collection.filter((item) =>
+        search.some((_) => item.key.includes(_))
+      );
 
     return collection.limit(limit ?? 5).toArray();
   }

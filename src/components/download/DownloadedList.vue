@@ -109,11 +109,12 @@ watch([date, website], update);
   <div class="box scrollbar">
     <div class="tools-box">
       <div class="tools">
-        <ElSelect v-model="website" clearable :disabled="loading">
-          <template #prefix>
-            <span>{{ language.downloadedComponent.website.title }}</span>
-            <span>:</span>
-          </template>
+        <ElSelect
+          v-model="website"
+          clearable
+          :disabled="loading"
+          :placeholder="language.downloadedComponent.website.title"
+        >
           <ElOption
             v-for="website in websites"
             :key="website.website"

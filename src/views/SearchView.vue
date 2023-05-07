@@ -11,6 +11,8 @@ import { onBeforeRouteLeave, useRouter } from "vue-router";
 import { IdTag } from "@/utils/tags";
 import type { ElMain } from "element-plus";
 import AddTag from "@/components/tag/AddTag.vue";
+import SeaerchHistory from "@/components/search/SearchHistory.vue";
+import { searchHistoryDB } from "@/utils/db";
 
 const props = defineProps<{
   website: Website;
@@ -188,6 +190,17 @@ function addTag(tag: Tag) {
   _.push(tag);
   toSearch(props.website, _);
 }
+
+function saveSearchHistory() {
+  if (!props.tags) return;
+  searchHistoryDB.save({
+    website: props.website,
+    tags: props.tags,
+    date: new Date(),
+  });
+}
+saveSearchHistory();
+onActivated(() => saveSearchHistory());
 </script>
 
 <template>
@@ -243,53 +256,55 @@ function addTag(tag: Tag) {
       </ElPageHeader>
     </ElHeader>
     <ElMain class="scrollbar" ref="scrollbar">
-      <PostList
-        v-if="tags"
-        :class="{
-          'has-post': posts.length,
-        }"
-        v-infinite-scroll="getPosts"
-        :posts="posts"
-        @click-post="openPost"
-      />
-      <ElAlert v-if="isGettingPosts" class="loading" :closable="false" center>
-        <span>{{ language.language.postListComponent.loading }}</span>
-        <ElIcon class="is-loading">
-          <i-ep-loading />
-        </ElIcon>
-      </ElAlert>
-      <ElAlert
-        v-else-if="isGettingPostsFailed"
-        type="error"
-        center
-        :closable="false"
-      >
-        <ElSpace alignment="center">
-          <span>{{ language.language.postListComponent.loadingFailed }}</span>
-          <ElButton
-            @click="failedGetPosts"
-            color="var(--el-color-error)"
-            text
-            plain
-          >
+      <template v-if="tags">
+        <PostList
+          :class="{
+            'has-post': posts.length,
+          }"
+          v-infinite-scroll="getPosts"
+          :posts="posts"
+          @click-post="openPost"
+        />
+        <ElAlert v-if="isGettingPosts" class="loading" :closable="false" center>
+          <span>{{ language.language.postListComponent.loading }}</span>
+          <ElIcon class="is-loading">
+            <i-ep-loading />
+          </ElIcon>
+        </ElAlert>
+        <ElAlert
+          v-else-if="isGettingPostsFailed"
+          type="error"
+          center
+          :closable="false"
+        >
+          <ElSpace alignment="center">
+            <span>{{ language.language.postListComponent.loadingFailed }}</span>
+            <ElButton
+              @click="failedGetPosts"
+              color="var(--el-color-error)"
+              text
+              plain
+            >
+              <ElIcon>
+                <i-ep-refresh />
+              </ElIcon>
+            </ElButton>
+          </ElSpace>
+        </ElAlert>
+        <ElAlert v-else-if="noMore" center type="info" :closable="false">
+          <span>{{
+            posts.length
+              ? language.language.postListComponent.noMore
+              : language.language.postListComponent.none
+          }}</span>
+          <ElButton @click="noMoreGetPosts" text plain>
             <ElIcon>
               <i-ep-refresh />
             </ElIcon>
           </ElButton>
-        </ElSpace>
-      </ElAlert>
-      <ElAlert v-else-if="noMore" center type="info" :closable="false">
-        <span>{{
-          posts.length
-            ? language.language.postListComponent.noMore
-            : language.language.postListComponent.none
-        }}</span>
-        <ElButton @click="noMoreGetPosts" text plain>
-          <ElIcon>
-            <i-ep-refresh />
-          </ElIcon>
-        </ElButton>
-      </ElAlert>
+        </ElAlert>
+      </template>
+      <SeaerchHistory v-else @to="toSearch" />
     </ElMain>
   </ElContainer>
 </template>

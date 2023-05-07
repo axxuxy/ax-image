@@ -418,6 +418,18 @@ const searchPage = {
   search: "搜索",
 };
 
+const searchComponent = {
+  search: "搜索字段",
+  date: "指定日期",
+  website: "指定站点",
+  loading: "加载中...",
+  noMore: "没有更多记录了...",
+  none: "搜索记录为空",
+  notMatchSearchHistory: "没有符合条件的记录",
+  loadFailed: "加载失败",
+  websites,
+};
+
 const zhCn = {
   name: "中文",
   elementPlus: _zhCn,
@@ -432,6 +444,7 @@ const zhCn = {
   downloadedComponent,
   downloadingComponent,
   tagComponent,
+  searchComponent,
 };
 
 export const i18n: {
