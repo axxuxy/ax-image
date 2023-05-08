@@ -140,7 +140,7 @@ class SearchHistoryDexie extends Dexie {
 
     if (search && search.length)
       collection = collection.filter((item) =>
-        search.some((_) => item.key.includes(_))
+        search.every((_) => item.key.includes(_))
       );
 
     return collection.limit(limit ?? 5).toArray();
