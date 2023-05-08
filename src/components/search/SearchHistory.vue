@@ -91,7 +91,7 @@ async function update() {
   loading.value = false;
   noMore.value = false;
   loadFailed.value = false;
-  await load();
+  await load(20);
 }
 watch([date, website], update);
 let timeout: ReturnType<typeof setTimeout> | undefined;
