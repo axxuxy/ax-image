@@ -47,38 +47,26 @@ class DownloadDexie extends Dexie {
     return await collection.limit(limit).toArray();
   }
 
-  async queryItem({
-    website,
-    id,
-    downloadType,
-  }: {
-    website: Website;
-    id: number;
-    downloadType: DownloadType;
-  }): Promise<DownloadedInfo | undefined> {
+  async queryItem(
+    website: Website,
+    id: number,
+    type: DownloadType
+  ): Promise<DownloadedInfo | undefined> {
     return await this.downloaded
       .where({
         website: website,
         id,
-        download_type: downloadType,
+        download_type: type,
       })
       .first();
   }
 
-  async deleteItem({
-    website,
-    downloadType,
-    id,
-  }: {
-    website: Website;
-    downloadType: DownloadType;
-    id: number;
-  }) {
+  async deleteItem(website: Website, id: number, type: DownloadType) {
     return await this.downloaded
       .where({
         website,
-        download_type: downloadType,
         id,
+        download_type: type,
       })
       .delete();
   }
@@ -111,7 +99,7 @@ class SearchHistoryDexie extends Dexie {
 
   async save(info: SearchHistoryInfo) {
     return await this.searchHistory.put({
-      key: `${info.website} - ${info.tags.sort().join(" ")}`,
+      key: `${info.website} - ${info.tags.slice().sort().join(" ")}`,
       ...info,
     });
   }
@@ -120,8 +108,8 @@ class SearchHistoryDexie extends Dexie {
     website,
     first,
     last,
+    search,
     limit,
-    search, /// TODO Test the argument.
   }: {
     website?: Website;
     first?: Date;
