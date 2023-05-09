@@ -67,7 +67,8 @@ const isGettingPostsFailed = ref(false);
 const noMore = ref(false);
 let abortController: AbortController | undefined;
 async function getPosts() {
-  if (isGettingPosts.value || noMore.value || isGettingPostsFailed.value) return;
+  if (isGettingPosts.value || noMore.value || isGettingPostsFailed.value)
+    return;
   isGettingPosts.value = true;
   try {
     abortController?.abort();
@@ -88,12 +89,10 @@ async function getPosts() {
     if (_.length < 100) noMore.value = true;
     posts.value.push(..._);
     useCache().addPosts(config.value.website, _);
-  } 
-  catch(error){
+  } catch (error) {
     isGettingPostsFailed.value = true;
     throw error;
-  }
-  finally {
+  } finally {
     isGettingPosts.value = false;
   }
 }

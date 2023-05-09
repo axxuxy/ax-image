@@ -395,7 +395,12 @@ export class ParentTag extends Tag {
   }
 }
 
-export class ParentNoneTag extends Tag {
+export class ParentNoneTag extends ParentTag {
   readonly type = TagType.parent;
-  readonly tag = "parent:none";
+  get tag() {
+    return "parent:none";
+  }
+  constructor() {
+    super(NaN);
+  }
 }

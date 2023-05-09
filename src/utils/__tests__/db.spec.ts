@@ -1,9 +1,27 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, type ArgumentsType } from "vitest";
 import "fake-indexeddb/auto";
-import { db } from "@/utils/db";
+import {
+  downloadedDB,
+  searchHistoryDB,
+  type SearchHistoryInfo,
+  type SearchHistoryItem,
+} from "@/utils/db";
 import { getDownloaded } from "@/utils/__tools__/db";
-import type { DownloadedInfo } from "@/utils/download";
+import { DownloadType, type DownloadedInfo } from "@/utils/download";
 import { Website } from "@/utils/website";
+import { Random } from "mockjs";
+import { getTag } from "@/utils/__tools__/tag";
+import { groupObject } from "@/utils/__tools__/groups";
+import { getPost } from "@/utils/__tools__/posts";
+
+function compareTimeLessPriorTime(list: Array<Date>) {
+  let prior: Date | undefined;
+  for (const date of list) {
+    if (prior && date > prior) return false;
+    prior = date;
+  }
+  return true;
+}
 
 type DownloadedInfoList = Array<DownloadedInfo>;
 function getDownloadeds(count: number, website?: Website): DownloadedInfoList {
@@ -26,7 +44,7 @@ function getDownloadeds(count: number, website?: Website): DownloadedInfoList {
 }
 
 async function saveDwonloadeds(downloadeds: DownloadedInfoList) {
-  for (const downloaded of downloadeds) await db.saveDownloadedInfo(downloaded);
+  for (const downloaded of downloadeds) await downloadedDB.save(downloaded);
 }
 
 const websites = Object.values(Website);
@@ -34,335 +52,198 @@ const websites = Object.values(Website);
 /**
  * Sort downloaded list by downloaded time, this is query order.
  */
-function orderDwonloadedByDownloadedAt(
+function orderDwonloadedrs(
   downloadeds: DownloadedInfoList
 ): DownloadedInfoList {
-  return downloadeds.sort(
-    (l, r) => r.downloaded_at.getTime() - l.downloaded_at.getTime()
+  return downloadeds.sort((l, r) =>
+    r.downloaded_at === l.downloaded_at
+      ? `${r.website} - ${r.id} - ${r.download_type}` >
+        `${l.website} - ${l.id} - ${l.download_type}`
+        ? 1
+        : -1
+      : r.downloaded_at.getTime() - l.downloaded_at.getTime()
   );
 }
 
 /**
  * The test of the describe cannot concurrent run.
- * Because saved data in db module will affect other test of db module.
+ * Because saved data in db module will affect other test of downloaded db module.
  */
-describe("Test db module.", async () => {
+describe("Test downloaded info db.", async () => {
   beforeEach(async () => {
-    await db.clear();
-    const data = await db.queryDownloadedInfos();
-    if (data.length) throw new Error("Test db module has data is not clear.");
+    await downloadedDB.clear();
+    const data = await downloadedDB.query();
+    if (data.length)
+      throw new Error("Test db module has data is not clear downloaded info.");
   });
 
   it("Test has save data.", async () => {
     await expect(
-      db.queryDownloadedInfos(),
+      downloadedDB.query(),
       "Saved data count not's 0."
     ).resolves.toEqual([]);
   });
 
-  it("Test whethen can save data and clear save data.", async () => {
-    await saveDwonloadeds(getDownloadeds(10));
-    await expect(db.queryDownloadedInfos()).resolves.not.toEqual([]);
-
-    await db.clear();
-    await expect(db.queryDownloadedInfos()).resolves.toEqual([]);
-  });
-
-  it("Test query data is order whethen by downloaded time.", async () => {
-    function compareTimeLessPriorTime(list: DownloadedInfoList) {
-      let prior: DownloadedInfo | null = null;
-      for (const data of list) {
-        if (prior && data.downloaded_at > prior!.downloaded_at) return false;
-        prior = data;
-      }
-      return true;
-    }
-    const data = websites.map((website) => ({
-      website,
-      data: getDownloadeds(10 + Math.floor(Math.random() * 5), website),
-    }));
-    await saveDwonloadeds(data.flatMap((website) => website.data));
-    await expect(
-      db.queryDownloadedInfos({ limit: data.length * 15 }),
-      "Query all data prior downloaded time less to that downloaded time."
-    ).resolves.toSatisfy((data) =>
-      compareTimeLessPriorTime(<DownloadedInfoList>data)
-    );
-
-    const last =
-      data[Math.floor(Math.random() * data.length)].data[0].downloaded_at;
-    await expect(
-      db.queryDownloadedInfos({ limit: data.length * 15, last }),
-      "Set last argument query data prior downloaded time less to that downloaded time."
-    ).resolves.toSatisfy((data) =>
-      compareTimeLessPriorTime(<DownloadedInfoList>data)
-    );
-
-    for (const website of data) {
-      await expect(
-        db.queryDownloadedInfos({
-          website: website.website,
-          limit: website.data.length + 1,
-        }),
-        `Set website argument to ${website.website} after, in query data, prior downloaded time less to that downloaded time.`
-      ).resolves.toSatisfy((data) =>
-        compareTimeLessPriorTime(<DownloadedInfoList>data)
-      );
-
-      const last = website.data[5].downloaded_at;
-      await expect(
-        db.queryDownloadedInfos({
-          website: website.website,
-          limit: website.data.length + 1,
-          last,
-        }),
-        `Set last argument and website argument to ${website.website} after, in query data, prior downloaded time less to that downloaded time.`
-      ).resolves.toSatisfy((data) =>
-        compareTimeLessPriorTime(<DownloadedInfoList>data)
-      );
-    }
-  });
-
-  it("Test that the save data and query data are consistent.", async () => {
-    const data = getDownloadeds(5);
+  it("Test save and clear data.", async () => {
+    const data = orderDwonloadedrs(getDownloadeds(20));
     await saveDwonloadeds(data);
-    orderDwonloadedByDownloadedAt(data);
+
+    /// Test saved data equal to save data.
     await expect(
-      db.queryDownloadedInfos({ limit: data.length + 1 }),
-      "Save data is unequal to query data."
-    ).resolves.toEqual(data);
-  });
+      downloadedDB.query({ limit: data.length + 10 }),
+      "Saved data unequal to save data."
+    ).resolves.toMatchObject(data);
 
-  it("Test limit argument whethen can limit query count.", async () => {
-    const data = getDownloadeds(20);
-    await saveDwonloadeds(data);
-    await expect(
-      db.queryDownloadedInfos({
-        limit: data.length - 1,
-      }),
-      "Query saved data count unequal to limit."
-    ).resolves.toHaveLength(data.length - 1);
-  });
-
-  it("Test query data by website.", async () => {
-    const data = websites.map((website) => {
-      return {
-        website,
-        data: orderDwonloadedByDownloadedAt(
-          getDownloadeds(5 + Math.round(Math.random() * 5), website)
-        ),
-      };
-    });
-
-    await saveDwonloadeds(
-      orderDwonloadedByDownloadedAt(data.flatMap((d) => d.data))
-    );
-
-    for (const website of data) {
-      await expect(
-        db.queryDownloadedInfos({
-          limit: website.data.length + 1,
-          website: website.website,
-        }),
-        "Query website data unequal to saved website data."
-      ).resolves.toEqual(website.data);
-
-      const limit = website.data.length - 1;
-      await expect(
-        db.queryDownloadedInfos({
-          limit,
-          website: website.website,
-        }),
-        "Query website data limit not limit query count."
-      ).resolves.toEqual(website.data.slice(0, limit));
-    }
-  });
-
-  it("Test first,last argument whethen can limit query data.", async () => {
-    const data = getDownloadeds(20);
-    await saveDwonloadeds(data);
-    orderDwonloadedByDownloadedAt(data);
-    const first = new Date(data[7].downloaded_at);
-    await expect(
-      db.queryDownloadedInfos({ first }),
-      "Query data have downloaded date less to first"
-    ).resolves.toSatisfy((data) =>
-      (data as DownloadedInfoList).every(
-        (data) => data.downloaded_at.getTime() >= first.getTime()
-      )
-    );
-
-    await expect(
-      db.queryDownloadedInfos({ first, limit: 5 }),
-      "Limit query data count unequal to set limit argument in set first date."
-    ).resolves.toHaveLength(5);
-
-    await expect(
-      db.queryDownloadedInfos({ first, limit: 100 }),
-      "Query data last item downloaded date unequal to first date."
-    ).resolves.toSatisfy(
-      (data) =>
-        (data as DownloadedInfoList).reverse()[0].downloaded_at.getTime() ===
-        first.getTime()
-    );
-
-    const last = new Date(data[10].downloaded_at);
-    await expect(
-      db.queryDownloadedInfos({ last }),
-      "Query data have downloaded date of grearth to last."
-    ).resolves.toSatisfy((data) =>
-      (<DownloadedInfoList>data).every(
-        (data) => data.downloaded_at.getTime() < last.getTime()
-      )
-    );
-
-    await expect(
-      db.queryDownloadedInfos({ last, limit: 5 }),
-      "Limit query data count unequal to set limit argument in set last date."
-    ).resolves.toHaveLength(5);
-
-    await expect(
-      db.queryDownloadedInfos({ first, last, limit: 100 }),
-      "Query data have dwonloaded date less to first or greater to last."
-    ).resolves.toSatisfy((data) =>
-      (<DownloadedInfoList>data).every(
-        (data) =>
-          data.downloaded_at.getTime() >= first.getTime() &&
-          data.downloaded_at.getTime() < last.getTime()
-      )
-    );
-  });
-
-  it("Test set website and first,last argument.", async () => {
-    const data = websites.map((website) => {
-      return {
-        website,
-        data: orderDwonloadedByDownloadedAt(
-          getDownloadeds(10 + Math.round(Math.random() * 5), website)
-        ),
-      };
-    });
-
-    await saveDwonloadeds(
-      orderDwonloadedByDownloadedAt(data.flatMap((d) => d.data))
-    );
-
-    for (const website of data) {
-      const first = website.data[8].downloaded_at;
-      await expect(
-        db.queryDownloadedInfos({
-          website: website.website,
-          first,
-        }),
-        "Query data have downloaded date less to first date or website unequal to query website."
-      ).resolves.toSatisfy((data) =>
-        (data as DownloadedInfoList).every(
-          (data) =>
-            data.downloaded_at.getTime() >= first.getTime() &&
-            data.website === website.website
-        )
-      );
-
-      await expect(
-        db.queryDownloadedInfos({ first, website: website.website, limit: 5 }),
-        "In set first and website argument after limit query data count unequal to set limit argument."
-      ).resolves.toHaveLength(5);
-
-      await expect(
-        db.queryDownloadedInfos({
-          website: website.website,
-          first,
-          limit: 100,
-        }),
-        "Query data last item downloaded date unequal to first date in set website argument."
-      ).resolves.toSatisfy(
-        (data) =>
-          (data as DownloadedInfoList).reverse()[0].downloaded_at.getTime() ===
-          first.getTime()
-      );
-
-      const last = website.data[1].downloaded_at;
-      await expect(
-        db.queryDownloadedInfos({
-          website: website.website,
-          last,
-        }),
-        "Query data have downloaded date grearth to last or website unequal to query website."
-      ).resolves.toSatisfy((data) =>
-        (<DownloadedInfoList>data).every(
-          (data) =>
-            data.downloaded_at.getTime() < last.getTime() &&
-            data.website === website.website
-        )
-      );
-
-      await expect(
-        db.queryDownloadedInfos({ last, website: website.website, limit: 5 }),
-        "In set last and website argument after limit query data count unequal to set limit argument in set last date."
-      ).resolves.toHaveLength(5);
-
-      await expect(
-        db.queryDownloadedInfos({
-          first,
-          last,
-          limit: 100,
-          website: website.website,
-        }),
-        "Query data have downloaded date less to first date or greater to last date or website unequal to query website."
-      ).resolves.toSatisfy((data) =>
-        (<DownloadedInfoList>data).every(
-          (data) =>
-            data.downloaded_at.getTime() >= first.getTime() &&
-            data.downloaded_at.getTime() < last.getTime() &&
-            data.website === website.website
-        )
-      );
-    }
-  });
-
-  it("Test save saved data, saved data whethen update.", async () => {
-    const data = getDownloadeds(20);
-    await saveDwonloadeds(data);
+    /// Test save saved data has update.
     const has = data[0];
-    orderDwonloadedByDownloadedAt(data);
-    await db.saveDownloadedInfo(has);
+    await downloadedDB.save(has);
     await expect(
-      db.queryDownloadedInfos({ limit: data.length + 1 }),
+      downloadedDB.query({ limit: data.length + 1 }),
       "Save saved data, saved data has update."
     ).resolves.toEqual(data);
+
+    /// Test save updated date data has update data.
     const now = new Date();
     has.downloaded_at = now;
-    has.download_at = new Date(
-      now.getTime() - Math.floor(Math.random() * 60) - 60
-    );
-    await db.saveDownloadedInfo(has);
-    orderDwonloadedByDownloadedAt(data);
+    has.download_at = new Date(now.getTime() - Random.integer(0, 60) - 60);
+    await downloadedDB.save(has);
+    orderDwonloadedrs(data);
     await expect(
-      db.queryDownloadedInfos({ limit: data.length + 1 }),
-      "Update saved data, saved data not update."
+      downloadedDB.query({ limit: data.length + 1 }),
+      "Update saved data, saved data not update, in downloaded db."
     ).resolves.toEqual(data);
+
+    /// Test clear data.
+    await downloadedDB.clear();
+    await expect(downloadedDB.query()).resolves.toEqual([]);
   });
 
-  it("Test query specific data.", async () => {
-    const data = getDownloadeds(10);
+  it("Test query.", async () => {
+    const date = new Date(2020);
+    const first = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 1
+      ),
+      _first = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 2
+      ),
+      last = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1),
+      _last = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 2),
+      befater = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 3
+      ),
+      after = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 3);
+    const post = getPost();
+    const downloadTypes = Object.values(DownloadType);
+    const data = orderDwonloadedrs(
+      [date, first, _first, last, _last]
+        .map((date) => ({
+          downloaded_at: date,
+          download_at: new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            date.getHours(),
+            date.getMinutes(),
+            date.getSeconds() - 60 - Random.integer(0, 60)
+          ),
+        }))
+        .flatMap((_, index) =>
+          downloadTypes.flatMap((download_type, typeIndex) =>
+            websites.map((website, websiteIndex) => ({
+              ...post,
+              ..._,
+              download_type,
+              id:
+                post.id +
+                index * downloadTypes.length * websites.length +
+                typeIndex * websites.length +
+                websiteIndex,
+              website,
+              size: 9000,
+              save_path: "download_path",
+            }))
+          )
+        )
+    );
+
     await saveDwonloadeds(data);
 
-    const randomHasDwonloaded = data[Math.floor(data.length * Math.random())];
     await expect(
-      db.queryDownloadedInfo({
-        website: randomHasDwonloaded.website,
-        downloadType: randomHasDwonloaded.download_type,
-        id: randomHasDwonloaded.id,
+      downloadedDB.query({
+        limit: data.length + 10,
       }),
-      "Saved data not find."
-    ).resolves.toEqual(randomHasDwonloaded);
+      "Downloaded db query data unequal to save data."
+    ).resolves.toEqual(data);
+
+    function vaildExpect(
+      data: DownloadedInfoList,
+      arg: Partial<
+        Exclude<ArgumentsType<typeof downloadedDB.query>[0], undefined>
+      >
+    ) {
+      return (
+        !!data.length &&
+        compareTimeLessPriorTime(data.map((data) => data.downloaded_at)) &&
+        (arg.limit ? data.length === arg.limit : true) &&
+        data.every(
+          (item) =>
+            (arg.first ? item.downloaded_at >= arg.first : true) &&
+            (arg.last ? item.downloaded_at < arg.last : true) &&
+            (arg.website ? item.website === arg.website : true)
+        )
+      );
+    }
+
+    const invailds = groupObject({
+      first: after,
+      last: befater,
+    }).filter((_) => _.first || _.last);
+    const vailds = groupObject({
+      limit: downloadTypes.length * 2, /// The limit is can query min count.
+      first,
+      last,
+    }).flatMap((_) =>
+      [undefined, ...websites].map((website) => Object.assign({ website }, _))
+    );
+    for (const vaild of vailds) {
+      await expect(
+        downloadedDB.query(vaild),
+        `The vaild argument query date chech failed, the argument website:${vaild.website} first:${vaild.first} last:${vaild.last} limit:${vaild.limit}`
+      ).resolves.toSatisfy((data) =>
+        vaildExpect(data as DownloadedInfoList, vaild)
+      );
+
+      if (vaild.first || vaild.last) {
+        for (const invaild of invailds) {
+          const arg = {
+            ...vaild,
+            ...invaild,
+          };
+          await expect(
+            downloadedDB.query(arg),
+            `The vaild argument query date chech failed, the argument website:${arg.website} first:${arg.first} last:${arg.last} limit:${arg.limit}`
+          ).resolves.toEqual([]);
+        }
+      }
+    }
   });
 
-  it("Test query not saved data.", async () => {
+  it("Test query item.", async () => {
     const data = getDownloadeds(10);
     await saveDwonloadeds(data);
 
-    const has = data[0];
+    const has = data[Random.integer(0, data.length - 1)];
+    await expect(
+      downloadedDB.queryItem(has.website, has.id, has.download_type),
+      "Saved data not find."
+    ).resolves.toEqual(has);
+
     const not = {
       website: has.website,
       id: has.id + 100,
@@ -379,8 +260,240 @@ describe("Test db module.", async () => {
       not.id++;
     }
     await expect(
-      db.queryDownloadedInfo(not),
+      downloadedDB.queryItem(not.website, not.id, not.downloadType),
       "Find not saved data."
     ).resolves.toBeUndefined();
+  });
+
+  it("Test delete item", async () => {
+    const data = getDownloadeds(1);
+    await saveDwonloadeds(data);
+    const [_] = await downloadedDB.query();
+    await downloadedDB.deleteItem(_.website, _.id, _.download_type);
+    await expect(
+      downloadedDB.query(),
+      "Delete after still can query data."
+    ).resolves.toEqual([]);
+    await expect(
+      downloadedDB.queryItem(_.website, _.id, _.download_type),
+      "Delete after query the data unequal to undefined."
+    ).resolves.toBeUndefined();
+  });
+});
+
+function getWebsite() {
+  return websites[Random.integer(0, websites.length - 1)];
+}
+function getTags() {
+  return new Array(Random.integer(1, 7)).fill(null).map(() => getTag().tag);
+}
+function getSearchHistory(website?: Website) {
+  return {
+    website: website ?? getWebsite(),
+    tags: getTags(),
+    date: new Date(Random.date()),
+  };
+}
+function getSearchHistorys(count: number, website?: Website) {
+  if (count < 1) throw new Error("Not get search history count less 1.");
+  const map = new Map<string, SearchHistoryInfo>();
+  do {
+    const info: SearchHistoryInfo = getSearchHistory(website);
+    map.set(`${info.website} - ${info.tags.sort().join(" ")}`, info);
+  } while (map.size < count);
+  return Array.from(map.values());
+}
+async function saveSearchHistorys(list: Array<SearchHistoryInfo>) {
+  for (const item of list) {
+    await searchHistoryDB.save(item);
+  }
+}
+function orderSearchHistorys(list: Array<SearchHistoryInfo>) {
+  return list.sort((l, r) =>
+    r.date === l.date
+      ? `${r.website} - ${r.tags.slice().sort().join(" ")}` >
+        `${l.website} - ${l.tags.slice().sort().join(" ")}`
+        ? 1
+        : -1
+      : r.date.getTime() - l.date.getTime()
+  );
+}
+/**
+ * The test of the describe cannot concurrent run.
+ * Because saved data in db module will affect other test of search history db module.
+ */
+describe("Test search history info db.", async () => {
+  beforeEach(async () => {
+    await searchHistoryDB.clear();
+    const data = await searchHistoryDB.query();
+    if (data.length)
+      throw new Error(
+        "Test db module has data is not clear search history info."
+      );
+  });
+
+  it("Test has save data.", async () => {
+    await expect(
+      searchHistoryDB.query(),
+      "Saved data count not's 0."
+    ).resolves.toEqual([]);
+  });
+
+  it("Test save and clear data.", async () => {
+    const data = orderSearchHistorys(getSearchHistorys(20));
+    await saveSearchHistorys(data);
+
+    /// Test saved data equal to save data.
+    await expect(
+      searchHistoryDB.query({ limit: data.length + 10 }),
+      "Saved data unequal to save data."
+    ).resolves.toMatchObject(data);
+
+    /// Test save saved data has update.
+    const has = data[0];
+    await searchHistoryDB.save(has);
+    await expect(
+      searchHistoryDB.query({ limit: data.length + 1 }),
+      "Save saved data, saved data has update, in search history db."
+    ).resolves.toMatchObject(data);
+
+    /// Test save updated date data has update data.
+    const now = new Date();
+    has.date = now;
+    await searchHistoryDB.save(has);
+    orderSearchHistorys(data);
+    await expect(
+      searchHistoryDB.query({ limit: data.length + 1 }),
+      "Update saved data, saved data not update, in downloaded db."
+    ).resolves.toMatchObject(data);
+
+    /// Test clear data.
+    await searchHistoryDB.clear();
+    await expect(searchHistoryDB.query()).resolves.toEqual([]);
+  });
+
+  it("Test query.", async () => {
+    const date = new Date(2020);
+    const first = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 1
+      ),
+      _first = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 2
+      ),
+      last = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1),
+      _last = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 2),
+      befater = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 3
+      ),
+      after = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 3);
+
+    const data = orderSearchHistorys(
+      [...websites].flatMap((website, index) =>
+        [date, first, _first, last, _last].flatMap((date, i) => [
+          {
+            website,
+            date,
+            tags: ["abcdefg", `123456789-${index}-${i}`],
+          },
+          {
+            website,
+            date,
+            tags: ["abcdefg", `987456123-${index}-${i}`],
+          },
+          {
+            website,
+            date,
+            tags: [`abcdefg-${index}-${i}`],
+          },
+        ])
+      )
+    );
+    await saveSearchHistorys(data);
+    await expect(
+      searchHistoryDB.query({
+        limit: data.length + 10,
+      }),
+      "Search history db query data unequal to save data."
+    ).resolves.toMatchObject(data);
+
+    function vaildExpect(
+      data: Array<SearchHistoryItem>,
+      arg: Partial<
+        Exclude<ArgumentsType<typeof searchHistoryDB.query>[0], undefined>
+      >
+    ) {
+      return (
+        !!data.length &&
+        compareTimeLessPriorTime(data.map((data) => data.date)) &&
+        (arg.limit ? data.length === arg.limit : true) &&
+        data.every(
+          (item) =>
+            (arg.first ? item.date >= arg.first : true) &&
+            (arg.last ? item.date < arg.last : true) &&
+            (arg.search
+              ? arg.search.every((search) =>
+                  item.tags.some((tag) => tag.includes(search))
+                )
+              : true) &&
+            (arg.website ? item.website === arg.website : true)
+        )
+      );
+    }
+
+    const invailds = groupObject({
+      first: after,
+      last: befater,
+      search: ["abc", "321"],
+    }).filter((_) => _.first || _.last || _.search);
+    const vailds = groupObject({
+      limit: 4, /// 2 date and 2 search match, min 4 limt.
+      first,
+      last,
+      search: ["abc", "123"],
+    }).flatMap((_) =>
+      [undefined, ...websites].map((website) => Object.assign({ website }, _))
+    );
+    for (const vaild of vailds) {
+      await expect(
+        searchHistoryDB.query(vaild),
+        `The vaild argument query date chech failed, the argument website:${vaild.website} first:${vaild.first} last:${vaild.last} search:${vaild.search} limit:${vaild.limit}`
+      ).resolves.toSatisfy((data) =>
+        vaildExpect(data as Array<SearchHistoryItem>, vaild)
+      );
+
+      if (vaild.first || vaild.last || vaild.search) {
+        for (const invaild of invailds) {
+          const arg = {
+            ...vaild,
+            ...invaild,
+          };
+          await expect(
+            searchHistoryDB.query(arg),
+            `The vaild argument query date chech failed, the argument website:${arg.website} first:${arg.first} last:${arg.last} search:${arg.search} limit:${arg.limit}`
+          ).resolves.toEqual([]);
+        }
+      }
+    }
+  });
+
+  it("Test delete item.", async () => {
+    const date = {
+      website: Website.konachan,
+      date: new Date(2020),
+      tags: ["name"],
+    };
+    await saveSearchHistorys([date]);
+    const [_] = await searchHistoryDB.query();
+    await searchHistoryDB.deleteItem(_.key);
+    await expect(
+      searchHistoryDB.query(),
+      "Delete item failed."
+    ).resolves.toEqual([]);
   });
 });

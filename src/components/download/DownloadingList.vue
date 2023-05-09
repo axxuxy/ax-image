@@ -10,7 +10,7 @@ import { storeToRefs } from "pinia";
 import DownloadedItem from "@/components/download/DownloadedItem.vue";
 import DownloadingItem from "@/components/download/DownloadingItem.vue";
 import { Website } from "@/utils/website";
-import { db } from "@/utils/db";
+import { downloadedDB } from "@/utils/db";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { existsSync, rmSync } from "fs";
 import type { Post } from "@/utils/api";
@@ -85,7 +85,7 @@ const websites = computed(() =>
 const website = ref<Website>();
 
 async function deleteDownload(download: DownloadItem) {
-  await db.deleteDownloaded({
+  await downloadedDB.deleteItem({
     website: download.download.website,
     downloadType: download.download.downloadType,
     id: download.download.post.id,
@@ -155,10 +155,11 @@ function openPost(download: DownloadItem) {
   <div class="box scrollbar">
     <div class="tools-box">
       <div class="tools">
-        <ElSelect v-model="website" clearable>
-          <template #prefix>
-            <span>{{ language.downloadingComponent.website.title }}:</span>
-          </template>
+        <ElSelect
+          v-model="website"
+          clearable
+          :placeholder="language.downloadingComponent.website.title"
+        >
           <ElOption
             v-for="website in websites"
             :key="website.website"

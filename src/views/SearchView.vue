@@ -4,13 +4,15 @@ import TagComponent from "@/components/tag/TagComponent.vue";
 import { useCache } from "@/stores/cache";
 import { useLanguage } from "@/stores/language";
 import { getPostsApi, getTagsApi, type Post } from "@/utils/api";
-import { CommonTag, ParentNoneTag, ParentTag, Tag } from "@/utils/tags";
+import { Tag, TagType } from "@/utils/tags";
 import type { Website } from "@/utils/website";
 import { computed, onActivated, ref, shallowRef } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
 import { IdTag } from "@/utils/tags";
 import type { ElMain } from "element-plus";
 import AddTag from "@/components/tag/AddTag.vue";
+import SeaerchHistory from "@/components/search/SearchHistory.vue";
+import { searchHistoryDB } from "@/utils/db";
 
 const props = defineProps<{
   website: Website;
@@ -37,7 +39,7 @@ const tagList = computed(() =>
     tag,
     key: tag.tag,
     type:
-      tag instanceof CommonTag
+      tag.type === TagType.common
         ? cache.tags.get(props.website)?.get(tag.value)?.type
         : undefined,
   }))
@@ -101,7 +103,7 @@ async function getPosts() {
       let needPushIdTag = true;
       for (let index = _tags.length - 1; index < _tags.length; index++) {
         const tag = _tags[index];
-        if (tag instanceof IdTag) {
+        if (tag.type === TagType.id) {
           if (typeof tag.value === "number") {
             console.warn(`Has tag set post id,don't need to load it anymore.`);
             return;
@@ -181,17 +183,24 @@ onBeforeRouteLeave(() => {
 
 function addTag(tag: Tag) {
   const _: Array<Tag> = tags.value
-    ? tag instanceof CommonTag
-      ? tags.value
-      : tag instanceof ParentNoneTag
-      ? tags.value.filter(
-          (_) => !(_ instanceof ParentTag || _ instanceof ParentNoneTag)
-        )
-      : tags.value.filter((_) => !(_ instanceof tag.constructor))
+    ? tag.type === TagType.common
+      ? tags.value.filter((_) => _.type !== TagType.common || _.tag !== tag.tag)
+      : tags.value.filter((_) => _.type !== tag.type)
     : [];
   _.push(tag);
   toSearch(props.website, _);
 }
+
+function saveSearchHistory() {
+  if (!props.tags) return;
+  searchHistoryDB.save({
+    website: props.website,
+    tags: props.tags,
+    date: new Date(),
+  });
+}
+saveSearchHistory();
+onActivated(() => saveSearchHistory());
 </script>
 
 <template>
@@ -247,53 +256,55 @@ function addTag(tag: Tag) {
       </ElPageHeader>
     </ElHeader>
     <ElMain class="scrollbar" ref="scrollbar">
-      <PostList
-        v-if="tags"
-        :class="{
-          'has-post': posts.length,
-        }"
-        v-infinite-scroll="getPosts"
-        :posts="posts"
-        @click-post="openPost"
-      />
-      <ElAlert v-if="isGettingPosts" class="loading" :closable="false" center>
-        <span>{{ language.language.postListComponent.loading }}</span>
-        <ElIcon class="is-loading">
-          <i-ep-loading />
-        </ElIcon>
-      </ElAlert>
-      <ElAlert
-        v-else-if="isGettingPostsFailed"
-        type="error"
-        center
-        :closable="false"
-      >
-        <ElSpace alignment="center">
-          <span>{{ language.language.postListComponent.loadingFailed }}</span>
-          <ElButton
-            @click="failedGetPosts"
-            color="var(--el-color-error)"
-            text
-            plain
-          >
+      <template v-if="tags">
+        <PostList
+          :class="{
+            'has-post': posts.length,
+          }"
+          v-infinite-scroll="getPosts"
+          :posts="posts"
+          @click-post="openPost"
+        />
+        <ElAlert v-if="isGettingPosts" class="loading" :closable="false" center>
+          <span>{{ language.language.postListComponent.loading }}</span>
+          <ElIcon class="is-loading">
+            <i-ep-loading />
+          </ElIcon>
+        </ElAlert>
+        <ElAlert
+          v-else-if="isGettingPostsFailed"
+          type="error"
+          center
+          :closable="false"
+        >
+          <ElSpace alignment="center">
+            <span>{{ language.language.postListComponent.loadingFailed }}</span>
+            <ElButton
+              @click="failedGetPosts"
+              color="var(--el-color-error)"
+              text
+              plain
+            >
+              <ElIcon>
+                <i-ep-refresh />
+              </ElIcon>
+            </ElButton>
+          </ElSpace>
+        </ElAlert>
+        <ElAlert v-else-if="noMore" center type="info" :closable="false">
+          <span>{{
+            posts.length
+              ? language.language.postListComponent.noMore
+              : language.language.postListComponent.none
+          }}</span>
+          <ElButton @click="noMoreGetPosts" text plain>
             <ElIcon>
               <i-ep-refresh />
             </ElIcon>
           </ElButton>
-        </ElSpace>
-      </ElAlert>
-      <ElAlert v-else-if="noMore" center type="info" :closable="false">
-        <span>{{
-          posts.length
-            ? language.language.postListComponent.noMore
-            : language.language.postListComponent.none
-        }}</span>
-        <ElButton @click="noMoreGetPosts" text plain>
-          <ElIcon>
-            <i-ep-refresh />
-          </ElIcon>
-        </ElButton>
-      </ElAlert>
+        </ElAlert>
+      </template>
+      <SeaerchHistory v-else @to="toSearch" />
     </ElMain>
   </ElContainer>
 </template>

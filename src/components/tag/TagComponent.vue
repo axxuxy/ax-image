@@ -15,6 +15,7 @@ import {
   DateTag,
   OrderTag,
   ParentTag,
+  TagType,
 } from "@/utils/tags";
 import type { Website } from "@/utils/website";
 import CommonTagVue from "@/components/tag/CommonTag.vue";
@@ -31,14 +32,13 @@ import MpixelsTagVue from "@/components/tag/MpixelsTag.vue";
 import DateTagVue from "@/components/tag/DateTag.vue";
 import OrderTagVue from "@/components/tag/OrderTag.vue";
 import ParentTagVue from "@/components/tag/ParentTag.vue";
-import TagValue from "@/components/tag/TagValue.vue";
-import type { Tag as ApiTag, TagType } from "@/utils/api";
+import type { Tag as ApiTag, TagType as ApiTagType } from "@/utils/api";
 
 defineProps<{
   tag: Tag;
   website: Website;
   searchTag: (text: string) => Promise<Array<ApiTag>>;
-  type?: TagType;
+  type?: ApiTagType;
 }>();
 
 const emit = defineEmits<{
@@ -56,92 +56,91 @@ function remove() {
 </script>
 
 <template>
+  <UserTagVue
+    v-if="tag.type === TagType.user"
+    :tag="(tag as UserTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <Vote3TagVue
+    v-else-if="tag.type === TagType.vote3"
+    :tag="(tag as Vote3Tag)"
+    @update="update"
+    @remove="remove"
+  />
+  <MD5TagVue
+    v-else-if="tag.type === TagType.md5"
+    :tag="(tag as MD5Tag)"
+    @update="update"
+    @remove="remove"
+  />
+  <RatingTagVue
+    v-else-if="tag.type === TagType.rating"
+    :tag="(tag as RatingTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <SourceTagVue
+    v-else-if="tag.type === TagType.source"
+    :tag="(tag as SourceTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <IdTagVue
+    v-else-if="tag.type === TagType.id"
+    :tag="(tag as IdTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <WidthTagVue
+    v-else-if="tag.type === TagType.width"
+    :tag="(tag as WidthTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <HeightTagVue
+    v-else-if="tag.type === TagType.height"
+    :tag="(tag as HeightTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <ScoreTagVue
+    v-else-if="tag.type === TagType.score"
+    :tag="(tag as ScoreTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <MpixelsTagVue
+    v-else-if="tag.type === TagType.mpixels"
+    :tag="(tag as MpixelsTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <DateTagVue
+    v-else-if="tag.type === TagType.date"
+    :tag="(tag as DateTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <OrderTagVue
+    v-else-if="tag.type === TagType.order"
+    :tag="(tag as OrderTag)"
+    @update="update"
+    @remove="remove"
+  />
+  <ParentTagVue
+    v-else-if="tag.type === TagType.parent"
+    :tag="(tag as ParentTag)"
+    @update="update"
+    @remove="remove"
+  />
   <CommonTagVue
-    v-if="tag instanceof CommonTag"
-    :tag="tag"
+    v-else
+    :tag="(tag as CommonTag)"
     :website="website"
     :fetch-suggestions="searchTag"
     :type="type"
     @update="update"
     @remove="remove"
   />
-  <UserTagVue
-    v-else-if="tag instanceof UserTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <Vote3TagVue
-    v-else-if="tag instanceof Vote3Tag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <MD5TagVue
-    v-else-if="tag instanceof MD5Tag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <RatingTagVue
-    v-else-if="tag instanceof RatingTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <SourceTagVue
-    v-else-if="tag instanceof SourceTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <IdTagVue
-    v-else-if="tag instanceof IdTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <WidthTagVue
-    v-else-if="tag instanceof WidthTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <HeightTagVue
-    v-else-if="tag instanceof HeightTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <ScoreTagVue
-    v-else-if="tag instanceof ScoreTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <MpixelsTagVue
-    v-else-if="tag instanceof MpixelsTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <DateTagVue
-    v-else-if="tag instanceof DateTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <OrderTagVue
-    v-else-if="tag instanceof OrderTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <ParentTagVue
-    v-else-if="tag instanceof ParentTag"
-    :tag="tag"
-    @update="update"
-    @remove="remove"
-  />
-  <TagValue v-else type="meta" hide-edit :tag="tag" @remove="remove" />
 </template>
