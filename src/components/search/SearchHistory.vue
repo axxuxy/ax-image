@@ -52,7 +52,6 @@ const loadFailed = ref(false);
 const noMore = ref(false);
 async function load(limit?: number) {
   if (loading.value || noMore.value) return;
-  console.log("load", limit);
   loading.value = true;
 
   const first = date.value;
