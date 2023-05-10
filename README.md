@@ -10,3 +10,6 @@ This's a image browse project. capture [yande.re](https://yande.re/post) and [ko
 |[vitest](https://cn.vitest.dev/)|unit test|
 |[playwright](https://playwright.dev/)|e2e test|
 |[dexie](https://dexie.org/)|indexed db data save|
+
+## show
+Show page to [doc/show.md](./doc/show.md)
