@@ -11,5 +11,5 @@ This's a image browse project. capture [yande.re](https://yande.re/post) and [ko
 |[playwright](https://playwright.dev/)|e2e test|
 |[dexie](https://dexie.org/)|indexed db data save|
 
-## show
-Show page to [doc/show.md](./doc/show.md)
+## look show page
+Look show page to [doc/show.md](./doc/show.md)
