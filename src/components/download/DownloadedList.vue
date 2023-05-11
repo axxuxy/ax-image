@@ -50,11 +50,11 @@ function loadDownloaded(limit = 10) {
 }
 
 async function deleteDownloadedInfo(downloaded: DownloadedInfo) {
-  await downloadedDB.deleteItem({
-    website: downloaded.website,
-    downloadType: downloaded.download_type,
-    id: downloaded.id,
-  });
+  await downloadedDB.deleteItem(
+    downloaded.website,
+    downloaded.id,
+    downloaded.download_type
+  );
   downloadeds.value = downloadeds.value.filter((_) => _ !== downloaded);
 }
 async function deleteDownloaded(downloaded: DownloadedInfo) {
