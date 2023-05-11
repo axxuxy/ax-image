@@ -85,11 +85,11 @@ const websites = computed(() =>
 const website = ref<Website>();
 
 async function deleteDownload(download: DownloadItem) {
-  await downloadedDB.deleteItem({
-    website: download.download.website,
-    downloadType: download.download.downloadType,
-    id: download.download.post.id,
-  });
+  await downloadedDB.deleteItem(
+    download.download.website,
+    download.download.post.id,
+    download.download.downloadType
+  );
   downloadings.value = downloadings.value.filter((_) => _ !== download);
 }
 
