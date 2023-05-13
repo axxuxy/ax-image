@@ -90,7 +90,7 @@ export const vueCaptureErrorPlugin: Plugin = {
         message: (<Error>err).message,
         stack: (<Error>err).stack || (<Error>err).toString(),
         name: (<Error>err).name,
-        routePath: vm?.$route?.fullPath,
+        routePath: location.href,
         componentPath: components,
         data: vm?.$data,
         info: info,
