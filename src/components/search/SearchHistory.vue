@@ -223,7 +223,7 @@ function to(website: Website, tags: Array<Tag>) {
           margin: 0 12px;
           cursor: pointer;
         }
-        &:last-child() {
+        &:last-child {
           flex: 1;
         }
       }
