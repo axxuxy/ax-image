@@ -127,7 +127,6 @@ export enum TagType {
   copyright = "copyright",
   character = "character",
   circle = "circle",
-  style = "style",
   faults = "faults",
 }
 
@@ -139,14 +138,12 @@ function getTagType(website: Website, type: number): TagType {
       return TagType.artist;
     case 3:
       return TagType.copyright;
-
     case 4:
       return TagType.character;
-
     case 5:
       switch (website) {
         case Website.konachan:
-          return TagType.style;
+          return TagType.faults;
         case Website.yande:
           return TagType.circle;
         default:

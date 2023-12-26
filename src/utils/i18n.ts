@@ -218,9 +218,6 @@ const tagTypes = (() => {
       case TagType.general:
         tagTypes[type] = "普通标签";
         break;
-      case TagType.style:
-        tagTypes[type] = "风格标签";
-        break;
       default:
         throw new Error(
           `Undefinde the tag type name, the tag type is ${type}.`
